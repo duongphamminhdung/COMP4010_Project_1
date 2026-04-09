@@ -1,0 +1,65 @@
+/* Page 1 Styles - Dũng */
+
+.page1-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+  color: #FFFFFF;
+}
+
+.page1-header {
+  background-color: #000000;
+  color: #FFFFFF;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.page1-header h1 {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.page1-header p {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.island-selection {
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.island-selection h2 {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 40px;
+}
+
+.island-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.page1-footer {
+  background-color: #A5D8FF;
+  padding: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .page1-header h1 {
+    font-size: 32px;
+  }
+
+  .island-selection h2 {
+    font-size: 28px;
+  }
+
+  .island-cards-container {
+    grid-template-columns: 1fr;
+  }
+}

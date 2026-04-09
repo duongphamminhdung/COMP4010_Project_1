@@ -1,0 +1,271 @@
+/* 3D Earth Map Styles - Dũng */
+
+.earth-map-container {
+  background: linear-gradient(135deg, #0a1628 0%, #1e3a5f 50%, #0a1628 100%);
+  padding: 40px 20px;
+  margin: 40px auto;
+  max-width: 1200px;
+  width: 95%;
+  border-radius: 20px;
+  border: 2px solid rgba(135, 206, 235, 0.3);
+  box-shadow: 0 0 40px rgba(135, 206, 235, 0.15),
+              inset 0 0 60px rgba(0, 0, 0, 0.5);
+}
+
+.earth-map-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 600px;
+}
+
+.earth-3d-container {
+  width: 100%;
+  height: 600px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  background: radial-gradient(circle at center, #0d1f3c 0%, #050a14 100%);
+  border: 3px solid rgba(135, 206, 235, 0.4);
+  box-shadow: 0 0 30px rgba(135, 206, 235, 0.2);
+  cursor: default;
+}
+
+.earth-3d-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.island-tooltip {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(5, 14, 30, 0.92);
+  border: 2px solid #FFD43B;
+  border-radius: 14px;
+  padding: 14px 26px;
+  text-align: center;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 30px rgba(255, 212, 59, 0.3);
+  animation: tooltipIn 0.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.island-tooltip h3 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+.island-tooltip p {
+  color: #A5D8FF;
+  font-size: 13px;
+  margin: 4px 0;
+}
+
+.tooltip-population {
+  color: #87CEEB !important;
+  font-size: 15px !important;
+  font-weight: 700;
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid rgba(165, 216, 255, 0.3) !important;
+}
+
+.tooltip-fact {
+  color: #FFD43B !important;
+  font-size: 12px !important;
+  font-style: italic;
+}
+
+.loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #87CEEB;
+  z-index: 10;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 15px;
+  border: 4px solid rgba(135, 206, 235, 0.3);
+  border-top: 4px solid #87CEEB;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-indicator p {
+  font-size: 16px;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(135, 206, 235, 0.6);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .earth-map-container {
+    max-width: 900px;
+    padding: 30px 15px;
+  }
+  
+  .earth-3d-container {
+    height: 550px;
+  }
+}
+
+@media (max-width: 992px) {
+  .earth-map-container {
+    max-width: 750px;
+    padding: 25px 15px;
+    margin: 30px auto;
+  }
+  
+  .earth-map-wrapper {
+    min-height: 500px;
+  }
+  
+  .earth-3d-container {
+    height: 500px;
+  }
+  
+  .island-tooltip {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  
+  .island-tooltip h3 {
+    font-size: 16px;
+  }
+  
+  .island-tooltip p {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .earth-map-container {
+    padding: 20px 10px;
+    margin: 20px auto;
+    border-radius: 16px;
+  }
+  
+  .earth-map-wrapper {
+    min-height: 450px;
+  }
+  
+  .earth-3d-container {
+    height: 450px;
+    border-radius: 12px;
+  }
+  
+  .island-tooltip {
+    top: 10px;
+    padding: 10px 16px;
+    border-radius: 10px;
+  }
+  
+  .island-tooltip h3 {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+  
+  .island-tooltip p {
+    font-size: 11px;
+    margin: 3px 0;
+  }
+  
+  .tooltip-population {
+    font-size: 13px !important;
+    padding-top: 6px !important;
+    margin-top: 6px !important;
+  }
+  
+  .tooltip-fact {
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .earth-map-container {
+    padding: 15px 8px;
+    margin: 15px auto;
+    width: 98%;
+  }
+  
+  .earth-map-wrapper {
+    min-height: 380px;
+  }
+  
+  .earth-3d-container {
+    height: 380px;
+    border: 2px solid rgba(135, 206, 235, 0.4);
+  }
+  
+  .island-tooltip {
+    top: 8px;
+    padding: 8px 12px;
+    max-width: 90%;
+    white-space: normal;
+  }
+  
+  .island-tooltip h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  .island-tooltip p {
+    font-size: 10px;
+    margin: 2px 0;
+  }
+  
+  .tooltip-population {
+    font-size: 12px !important;
+    padding-top: 5px !important;
+    margin-top: 5px !important;
+  }
+  
+  .tooltip-fact {
+    font-size: 10px !important;
+  }
+  
+  .loading-indicator p {
+    font-size: 14px;
+  }
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .earth-map-container {
+    padding: 12px 6px;
+  }
+  
+  .earth-3d-container {
+    height: 320px;
+  }
+  
+  .earth-map-wrapper {
+    min-height: 320px;
+  }
+}
