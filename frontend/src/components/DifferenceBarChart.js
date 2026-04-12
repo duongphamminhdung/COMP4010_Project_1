@@ -19,8 +19,8 @@ const FEATURE_META = [
 ];
 
 /** Group A vs B — saturated enough to read clearly on light backgrounds. */
-const COLOR_GROUP_A = "#1a78c9";
-const COLOR_GROUP_B = "#bf4f7c";
+const COLOR_GROUP_A = "#6eb8e5";
+const COLOR_GROUP_B = "#dbaac2";
 
 /**
  * Symmetric gap: how much % larger the bigger mean is than the smaller,

@@ -252,8 +252,8 @@ export function PenguinComparisonViz({
         <div className="penguin-viz__column">
           <PenguinFigure
             scales={scalesA}
-            accent="#1a78c9"
-            strokeColor="rgba(12, 52, 92, 0.5)"
+            accent="#6eb8e5"
+            strokeColor="rgba(30, 85, 120, 0.42)"
             gradId={gradA}
             sex={groupA?.sex}
           />
@@ -263,8 +263,8 @@ export function PenguinComparisonViz({
           <div className="penguin-viz__mirror">
             <PenguinFigure
               scales={scalesB}
-              accent="#bf4f7c"
-              strokeColor="rgba(85, 28, 55, 0.5)"
+              accent="#dbaac2"
+              strokeColor="rgba(115, 65, 88, 0.42)"
               gradId={gradB}
               sex={groupB?.sex}
             />

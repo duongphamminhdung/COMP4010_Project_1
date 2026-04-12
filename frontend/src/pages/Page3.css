@@ -6,12 +6,12 @@
   --ice-border: #a9d6e5;
   --ice-text: #0b2545;
   --ice-muted: #355e7a;
-  --ice-primary: #1a78c9;
+  --ice-primary: #6eb8e5;
   --ice-secondary: #1b4965;
   --ice-accent: #a9d6e5;
-  /* Higher-contrast pair for charts, KPIs, and legends on light ice UI */
-  --group-a: #1a78c9;
-  --group-b: #bf4f7c;
+  /* Softer glacier blue + dusty pink — paler but still distinct on light UI */
+  --group-a: #6eb8e5;
+  --group-b: #dbaac2;
   --danger: #b91c1c;
 
   padding: 24px;

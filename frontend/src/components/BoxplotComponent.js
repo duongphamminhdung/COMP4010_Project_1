@@ -15,10 +15,10 @@ const PLOTLY_TEXT = "#0b2545";
 const PLOTLY_MUTED = "#355e7a";
 const PLOTLY_GRID = "rgba(169, 214, 229, 0.85)";
 
-const COLOR_A = "#1a78c9";
-const COLOR_B = "#bf4f7c";
-const COLOR_A_LINE = "#115a8f";
-const COLOR_B_LINE = "#7d2f55";
+const COLOR_A = "#6eb8e5";
+const COLOR_B = "#dbaac2";
+const COLOR_A_LINE = "#4a9bc4";
+const COLOR_B_LINE = "#b87a98";
 
 /** Two-line x tick: species on first line, "from Island" on second — keeps labels under boxes without rotation. */
 function categoryLabelForAxis(fullLabel) {

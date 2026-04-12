@@ -40,8 +40,8 @@ function RadarChartComponent({ groupA, groupB, labelA, labelB, annotation = "" }
             <PolarGrid stroke="#a9d6e5" />
             <PolarAngleAxis dataKey="feature" stroke="#0b2545" tick={{ fill: "#0b2545", fontSize: 11 }} />
             <PolarRadiusAxis domain={[0, 1]} stroke="#a9d6e5" tick={false} />
-            <Radar name={labelA} dataKey="groupA" stroke="#115a8f" fill="#1a78c9" fillOpacity={0.26} />
-            <Radar name={labelB} dataKey="groupB" stroke="#7d2f55" fill="#bf4f7c" fillOpacity={0.26} />
+            <Radar name={labelA} dataKey="groupA" stroke="#4a9bc4" fill="#6eb8e5" fillOpacity={0.28} />
+            <Radar name={labelB} dataKey="groupB" stroke="#c48aa8" fill="#dbaac2" fillOpacity={0.28} />
             <Legend wrapperStyle={{ color: "#0b2545", fontSize: 12 }} />
           </RadarChart>
         </ResponsiveContainer>

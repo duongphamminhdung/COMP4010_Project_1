@@ -214,12 +214,12 @@ function Page3() {
           title={labelA}
           value={groupA}
           onChange={setGroupA}
-          accentColor="#1a78c9"
+          accentColor="#6eb8e5"
           titleClass="page3-group-title a"
           groupKpi={data.groupA}
           penguinMirror={false}
           penguinGradId="page3-card-belly-a"
-          penguinStrokeColor="rgba(11, 37, 69, 0.28)"
+          penguinStrokeColor="rgba(30, 85, 120, 0.4)"
           showPenguin={showCardPenguins}
           standInScales={data.standInScales?.groupA}
         />
@@ -227,13 +227,13 @@ function Page3() {
           title={labelB}
           value={groupB}
           onChange={setGroupB}
-          accentColor="#bf4f7c"
+          accentColor="#dbaac2"
           titleClass="page3-group-title b"
           cardTone="b"
           groupKpi={data.groupB}
           penguinMirror
           penguinGradId="page3-card-belly-b"
-          penguinStrokeColor="rgba(85, 28, 55, 0.48)"
+          penguinStrokeColor="rgba(115, 65, 88, 0.4)"
           showPenguin={showCardPenguins}
           standInScales={data.standInScales?.groupB}
         />

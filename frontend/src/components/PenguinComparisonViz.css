@@ -53,11 +53,11 @@
 }
 
 .penguin-viz__caption--a {
-  color: var(--group-a, #1a78c9);
+  color: var(--group-a, #6eb8e5);
 }
 
 .penguin-viz__caption--b {
-  color: var(--group-b, #bf4f7c);
+  color: var(--group-b, #dbaac2);
 }
 
 .penguin-figure {
