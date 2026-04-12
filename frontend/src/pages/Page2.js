@@ -5,9 +5,9 @@ import './Page2.css';
 
 // ===================== CONFIG =====================
 const COLORS = {
-  Adelie:    '#FF6B6B',
-  Chinstrap: '#2E86AB',
-  Gentoo:    '#1B4965',
+  Adelie:    '#4DA8DA',
+  Chinstrap: '#e07b39',
+  Gentoo:    '#38a169',
   gray:      '#C8D8E4',
   teal:      '#4DA8DA',
   ocean:     '#1B4965',
@@ -34,6 +34,13 @@ const BASE_LAYOUT = {
 };
 
 const SPECIES_LIST = ['Adelie', 'Chinstrap', 'Gentoo'];
+
+const ISLAND_SPECIES = {
+  ALL:       new Set(['Adelie', 'Chinstrap', 'Gentoo']),
+  Biscoe:    new Set(['Adelie', 'Gentoo']),
+  Dream:     new Set(['Adelie', 'Chinstrap']),
+  Torgersen: new Set(['Adelie']),
+};
 
 const MISSIONS = {
   giants: {
@@ -172,7 +179,7 @@ const KMeans = (() => {
 })();
 
 // ===================== COMPONENT =====================
-const Page2 = ({ island, onBack }) => {
+const Page2 = ({ island, onBack, onGoToComparison }) => {
   // Data state
   const [allData, setAllData] = useState([]);
   const [maxSpeciesCount, setMaxSpeciesCount] = useState(0);
@@ -336,6 +343,13 @@ const Page2 = ({ island, onBack }) => {
   const handleIslandChange = useCallback((val) => {
     setMission(null);
     setIslandFilter(val);
+    // Auto-deselect species not present on the chosen island
+    const valid = ISLAND_SPECIES[val] || ISLAND_SPECIES.ALL;
+    setSpecies(prev => {
+      const next = new Set([...prev].filter(sp => valid.has(sp)));
+      // If nothing remains, select all valid species on this island
+      return next.size > 0 ? next : new Set(valid);
+    });
   }, []);
 
   // K-Means overlay builder (must be above scatter useEffect)
@@ -716,7 +730,15 @@ const Page2 = ({ island, onBack }) => {
           <h1 className="title">Palmer Penguins &middot; Island Detail Explorer</h1>
           <div className="island-label" role="status" aria-live="polite">{islandLabel}</div>
         </div>
-        <div className="header-right" />
+        <div className="header-right">
+          <button
+            className="fight-btn"
+            onClick={() => onGoToComparison && onGoToComparison()}
+            aria-label="Go to Penguin Fight comparison page"
+          >
+            🐧 Penguin Fight!
+          </button>
+        </div>
       </header>
 
       {/* MAIN */}
@@ -788,17 +810,22 @@ const Page2 = ({ island, onBack }) => {
             <h2>Filters</h2>
             {/* Species */}
             <div className="filter-row" role="group" aria-label="Species filter">
-              {SPECIES_LIST.map(sp => (
-                <button
-                  key={sp}
-                  className={'chip species-' + sp.toLowerCase() + (species.has(sp) ? ' active' : '')}
-                  onClick={() => toggleSpecies(sp)}
-                  aria-pressed={species.has(sp)}
-                >
-                  <span className="dot" style={{ background: COLORS[sp] }} aria-hidden="true" />
-                  {sp}
-                </button>
-              ))}
+              {SPECIES_LIST.map(sp => {
+                const available = (ISLAND_SPECIES[islandFilter] || ISLAND_SPECIES.ALL).has(sp);
+                return (
+                  <button
+                    key={sp}
+                    className={'chip species-' + sp.toLowerCase() + (species.has(sp) ? ' active' : '') + (!available ? ' unavailable' : '')}
+                    onClick={() => available && toggleSpecies(sp)}
+                    aria-pressed={species.has(sp)}
+                    aria-disabled={!available}
+                    title={!available ? `${sp} not found on ${islandFilter} Island` : undefined}
+                  >
+                    <span className="dot" style={{ background: COLORS[sp] }} aria-hidden="true" />
+                    {sp}
+                  </button>
+                );
+              })}
             </div>
             {/* Sex */}
             <div className="filter-row" role="group" aria-label="Sex filter">

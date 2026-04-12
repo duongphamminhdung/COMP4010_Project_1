@@ -1,13 +1,15 @@
-/* Global Styles - Color Palette */
+/* Global Styles – Color Palette */
 :root {
-  --color-black: #000000;
-  --color-white: #FFFFFF;
+  --color-black:       #000000;
+  --color-white:       #FFFFFF;
   --color-pastel-blue: #A5D8FF;
-  --color-yellow: #FFD43B;
+  --color-yellow:      #FFD43B;
+  --color-ice-bg:      #f0f8ff;
+  --color-ice-mid:     #daeef9;
 }
 
 /* Base Styles */
 body {
-  background-color: var(--color-white);
+  background-color: var(--color-ice-bg);
   color: var(--color-black);
 }

@@ -13,6 +13,10 @@
   --gray:    #C8D8E4;
   --muted:   #4A6A78;
   --text:    #1B2B3A;
+  /* Species colors — consistent with Page1 */
+  --adelie:    #4DA8DA;
+  --chinstrap: #e07b39;
+  --gentoo:    #38a169;
   --radius-lg: 12px;
   --radius-md: 10px;
   --radius-sm: 6px;
@@ -88,6 +92,33 @@
   font-weight: 900;
   display: inline-block;
   transform: translateY(-2px);
+}
+
+.page2-container .fight-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+.page2-container .fight-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+.page2-container .fight-btn:active { transform: scale(0.95); }
+.page2-container .fight-btn:focus-visible {
+  outline: 3px solid #4da8da;
+  outline-offset: 2px;
 }
 
 .page2-container .logo {
@@ -413,11 +444,17 @@
   border-width: 2px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
-.page2-container .chip.species-adelie.active    { color: var(--coral); background: #FFF0F0; border-color: var(--coral); }
-.page2-container .chip.species-chinstrap.active { color: var(--cyan);  background: #E6F4F9; border-color: var(--cyan); }
-.page2-container .chip.species-gentoo.active    { color: var(--ocean); background: #E4ECF2; border-color: var(--ocean); }
+.page2-container .chip.species-adelie.active    { color: var(--adelie);    background: rgba(77,168,218,0.12);  border-color: var(--adelie); }
+.page2-container .chip.species-chinstrap.active { color: var(--chinstrap); background: rgba(224,123,57,0.12);  border-color: var(--chinstrap); }
+.page2-container .chip.species-gentoo.active    { color: var(--gentoo);    background: rgba(56,161,105,0.12);  border-color: var(--gentoo); }
 .page2-container .chip.sex-chip.active  { color: var(--ocean); background: var(--frost); border-color: var(--ocean); }
 .page2-container .chip.island-chip.active { color: var(--ocean); background: var(--frost); border-color: var(--ocean); box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+.page2-container .chip.unavailable {
+  opacity: 0.38;
+  border-style: dashed;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 
 /* ===== STATS ===== */
 .page2-container .stats-count {

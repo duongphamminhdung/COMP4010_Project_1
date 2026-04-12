@@ -31,26 +31,49 @@ const ISLANDS = [
   {
     name: 'Biscoe',
     lat: -62.0, lon: -56.0,    // upper-right of triangle
+    realCoords: '65°26\'S, 65°30\'W',
     species: 'Adélie & Gentoo',
+    speciesDetail: [
+      { name: 'Adélie', count: 44, emoji: '🐧' },
+      { name: 'Gentoo', count: 124, emoji: '🐧' },
+    ],
     population: '168 penguins',
     color: '#A5D8FF',
-    fact: 'Largest island in the study',
+    fact: 'Largest island in the study — home to the Gentoo colony, the deepest-diving penguin species.',
+    avgMass_g: 4691,
+    avgFlipperMm: 210,
+    image: '/island-biscoe.png',
   },
   {
     name: 'Dream',
     lat: -62.0, lon: -74.0,    // upper-left of triangle
+    realCoords: '64°44\'S, 64°14\'W',
     species: 'Adélie & Chinstrap',
+    speciesDetail: [
+      { name: 'Adélie', count: 56, emoji: '🐧' },
+      { name: 'Chinstrap', count: 68, emoji: '🐧' },
+    ],
     population: '124 penguins',
     color: '#FFD43B',
-    fact: 'Home to two species',
+    fact: 'Two species share this island — Chinstrap penguins are named for the thin black band under their chin.',
+    avgMass_g: 3806,
+    avgFlipperMm: 196,
+    image: '/island-dream.png',
   },
   {
     name: 'Torgersen',
     lat: -72.0, lon: -65.0,    // bottom-center of triangle
+    realCoords: '64°46\'S, 64°05\'W',
     species: 'Adélie only',
+    speciesDetail: [
+      { name: 'Adélie', count: 52, emoji: '🐧' },
+    ],
     population: '52 penguins',
     color: '#FFFFFF',
-    fact: 'Smallest, Adélie exclusive',
+    fact: 'The smallest and most southerly island — an exclusive Adélie colony studied since 1989.',
+    avgMass_g: 3706,
+    avgFlipperMm: 191,
+    image: '/island-torgersen.png',
   },
 ];
 
@@ -638,12 +661,39 @@ const EarthMap = ({ onIslandClick }) => {
             aria-live="polite"
             style={{ borderColor: displayIsland.color === '#FFFFFF' ? '#A5D8FF' : displayIsland.color }}
           >
-            <h3 style={{ color: displayIsland.color === '#FFFFFF' ? '#A5D8FF' : displayIsland.color }}>
-              {displayIsland.name} Island
-            </h3>
-            <p>{displayIsland.species}</p>
-            <p className="tooltip-population">{displayIsland.population}</p>
-            <p className="tooltip-fact">{displayIsland.fact}</p>
+            <div
+              className="tooltip-header"
+              style={{ background: displayIsland.color === '#FFFFFF' ? '#A5D8FF' : displayIsland.color }}
+            >
+              <h3>{displayIsland.name} Island</h3>
+              <span className="tooltip-coords">{displayIsland.realCoords}</span>
+            </div>
+            <div className="tooltip-body">
+              <div className="tooltip-species-list">
+                {displayIsland.speciesDetail.map(s => (
+                  <div key={s.name} className="tooltip-species-row">
+                    <span className="tooltip-species-name">{s.name}</span>
+                    <span className="tooltip-species-count">{s.count} birds</span>
+                  </div>
+                ))}
+              </div>
+              <div className="tooltip-metrics">
+                <div className="tooltip-metric">
+                  <span className="metric-label">Total</span>
+                  <span className="metric-value">{displayIsland.population}</span>
+                </div>
+                <div className="tooltip-metric">
+                  <span className="metric-label">Avg mass</span>
+                  <span className="metric-value">{(displayIsland.avgMass_g / 1000).toFixed(1)} kg</span>
+                </div>
+                <div className="tooltip-metric">
+                  <span className="metric-label">Avg flipper</span>
+                  <span className="metric-value">{displayIsland.avgFlipperMm} mm</span>
+                </div>
+              </div>
+              <p className="tooltip-fact">{displayIsland.fact}</p>
+              <p className="tooltip-cta">Click to explore data →</p>
+            </div>
           </div>
         )}
         <p className="earth-hint" aria-hidden="true">Click an island to explore</p>
