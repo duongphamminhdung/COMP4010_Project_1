@@ -1,0 +1,1787 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Palmer Penguins — Island Detail Explorer</title>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐧</text></svg>">
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+  /* ===== DESIGN TOKENS ===== */
+  :root {
+    --bg:      #F4FAFF;
+    --frost:   #E8F4FD;
+    --card:    #FFFFFF;
+    --border:  #D0E8F5;
+    --ocean:   #1B4965;
+    --teal:    #4DA8DA;
+    --coral:   #FF6B6B;
+    --cyan:    #2E86AB;   /* Chinstrap — distinct from --teal UI accent */
+    --gray:    #C8D8E4;
+    --muted:   #4A6A78;   /* darkened from #5A7D8C to pass 4.5:1 on --frost */
+    --text:    #1B2B3A;
+    --radius-lg: 12px;
+    --radius-md: 10px;
+    --radius-sm: 6px;
+    --header-h: 52px;
+  }
+
+  /* ===== RESET ===== */
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ===== VISUALLY HIDDEN (for screen readers) ===== */
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    background: var(--ocean);
+    color: #fff;
+    padding: 8px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 6px rgba(27,73,101,0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 80px;
+  }
+  .header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+  .header-right { justify-content: flex-end; }
+
+  .back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 150ms ease;
+    text-decoration: none;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  .back-btn:active { transform: scale(0.92); }
+  .back-btn span {
+    font-size: 28px;
+    font-weight: 900;
+    display: inline-block;
+    transform: translateY(-2px);
+  }
+
+  .logo {
+    height: 44px;
+    width: auto;
+    filter: brightness(0) invert(1);
+  }
+  .course-info {
+    font-size: 13px;
+    line-height: 1.2;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    padding-left: 12px;
+    display: flex;
+    flex-direction: column;
+  }
+  .course-name { font-weight: 700; letter-spacing: 0.3px; }
+  .course-code { font-weight: 400; opacity: 0.9; }
+
+  .header-center {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  header .title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0;
+    text-align: center;
+  }
+  header .island-label {
+    font-size: 16px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    opacity: 0.9;
+    text-align: center;
+  }
+
+  /* ===== LAYOUT ===== */
+  main {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: minmax(280px, min(20vw, 360px)) 1fr;
+    gap: clamp(12px, 1.4vw, 24px);
+    padding: clamp(12px, 1.4vw, 24px);
+    padding-bottom: 32px;
+    width: 100%;
+    min-height: 0;
+  }
+  .sidebar {
+    display: flex; flex-direction: column; gap: clamp(10px, 1vw, 16px);
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100vh - var(--header-h));
+    overflow-y: auto;
+    align-self: start;
+    padding-right: 4px;
+  }
+  .stage { display: flex; flex-direction: column; gap: clamp(10px, 1vw, 16px); min-height: 0; }
+
+  /* ===== CARD ===== */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(27,73,101,0.05);
+  }
+  .card h2, .card h3 {
+    margin: 0 0 10px 0;
+    font-size: 12px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  /* Chart takeaway titles in the stage — prominent */
+  #scatterTitle, #barTitle, #boxTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ocean);
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+  }
+  .scatter-card {
+    padding: 20px 20px 16px;
+  }
+
+  /* ===== DISCOVERY MISSIONS ===== */
+  .mission-card {
+    border-top: 4px solid var(--coral);
+    background: linear-gradient(180deg, #FFF9F9 0%, #fff 100%);
+  }
+  .mission-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .mission-btn {
+    background: #fff;
+    border: 2px solid var(--border);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: all 200ms ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mission-btn:hover {
+    border-color: var(--coral);
+    background: #FFF5F5;
+    transform: translateX(4px);
+  }
+  .mission-btn.active {
+    border-color: var(--coral);
+    background: #FFF0F0;
+    box-shadow: 0 2px 8px rgba(255,107,107,0.15);
+  }
+  .mission-btn .icon { font-size: 18px; }
+  .mission-btn .m-title { font-size: 13px; font-weight: 700; color: var(--ocean); display: block; }
+  .mission-btn .m-desc { font-size: 11px; color: var(--muted); }
+
+  /* ===== SCATTER LAYOUT WITH NARRATIVE PANEL ===== */
+  .scatter-layout {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .narrative-panel {
+    width: 210px;
+    flex-shrink: 0;
+    background: var(--frost);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .narrative-panel h3 {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin: 0 0 8px 0;
+  }
+  .story-text {
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.65;
+  }
+  #narrativeDetails ul {
+    margin: 8px 0 0 0;
+    padding-left: 16px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  #narrativeDetails li { margin-bottom: 5px; }
+  .highlight { color: var(--ocean); font-weight: 700; }
+  .plot-area { flex: 1; min-width: 0; }
+  @media (max-width: 1100px) {
+    .scatter-layout { flex-direction: column; }
+    .narrative-panel { width: 100%; }
+  }
+
+  /* ===== PENGUIN SELECTOR ===== */
+  .penguin-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-md);
+    overflow: visible;
+    background: var(--frost);
+  }
+  .penguin-wrap img {
+    width: 100%; height: 100%;
+    display: block;
+    border-radius: var(--radius-md);
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .zone {
+    position: absolute;
+    width: 28px; height: 28px;
+    margin-left: -14px; margin-top: -14px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: var(--teal);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    cursor: pointer;
+    transition: width 180ms ease, height 180ms ease, margin 180ms ease,
+                background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: #fff;
+    overflow: visible;
+  }
+  .zone:hover {
+    width: 36px; height: 36px;
+    margin-left: -18px; margin-top: -18px;
+    border: 3px solid var(--teal);
+    background: rgba(77,168,218,0.75);
+    box-shadow: 0 0 0 6px rgba(77,168,218,0.18);
+    font-size: 11px;
+  }
+  .zone:focus-visible {
+    outline: 3px solid var(--ocean);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 6px rgba(27,73,101,0.20);
+    width: 36px; height: 36px;
+    margin-left: -18px; margin-top: -18px;
+    font-size: 11px;
+  }
+  @media (hover: none) {
+    .zone {
+      width: 36px; height: 36px;
+      margin-left: -18px; margin-top: -18px;
+      font-size: 11px;
+    }
+  }
+  .zone.x-selected {
+    width: 36px; height: 36px;
+    margin-left: -18px; margin-top: -18px;
+    background: var(--teal);
+    border: 3px solid var(--teal);
+    font-size: 11px;
+  }
+  .zone.y-selected {
+    width: 36px; height: 36px;
+    margin-left: -18px; margin-top: -18px;
+    background: var(--ocean);
+    border: 3px solid var(--ocean);
+    font-size: 11px;
+  }
+
+  .zone-tooltip {
+    position: absolute;
+    left: 50%; top: -38px;
+    transform: translateX(-50%);
+    background: var(--ocean);
+    color: #fff;
+    padding: 5px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 180ms ease;
+    z-index: 10;
+  }
+  .zone:hover .zone-tooltip,
+  .zone:focus-visible .zone-tooltip { opacity: 1; }
+  .zone-tooltip::after {
+    content: "";
+    position: absolute;
+    left: 50%; top: 100%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--ocean);
+  }
+
+  .readout {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--frost);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .readout .row { display: flex; align-items: center; gap: 8px; }
+  .readout .badge {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 11px; font-weight: 700;
+    text-align: center; line-height: 18px;
+    flex-shrink: 0;
+  }
+  .badge.x { background: var(--teal); }
+  .badge.y { background: var(--ocean); }
+
+  .fifo-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    padding: 0 8px;
+    background: #fff;
+    border-left: 3px solid var(--teal);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 220ms ease, opacity 220ms ease, padding 220ms ease;
+  }
+  .fifo-hint.visible {
+    max-height: 48px;
+    opacity: 1;
+    padding: 5px 8px;
+  }
+
+  .reset-btn {
+    margin-top: 10px;
+    width: 100%;
+    background: var(--ocean);
+    border: 2px solid var(--ocean);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.5px;
+    transition: background 150ms ease, transform 100ms ease;
+  }
+  .reset-btn:hover { background: #235f82; border-color: #235f82; }
+  .reset-btn:active { transform: scale(0.97); }
+  .reset-btn:focus-visible {
+    outline: 3px solid var(--teal);
+    outline-offset: 3px;
+  }
+
+  /* ===== FILTER CHIPS ===== */
+  .filter-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 8px;
+    border: none; padding: 0;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    font-size: 12px; font-weight: 600;
+    color: var(--muted);
+    transition: all 150ms ease;
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(27,73,101,0.06);
+  }
+  .chip:active { transform: scale(0.95); }
+  .chip input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .chip:focus-within {
+    outline: 3px solid var(--ocean);
+    outline-offset: 2px;
+  }
+  .chip .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .chip.active {
+    border-width: 2px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+  .chip[data-species="Adelie"].active    { color: var(--coral); background: #FFF0F0; border-color: var(--coral); }
+  .chip[data-species="Chinstrap"].active { color: var(--cyan);  background: #E6F4F9; border-color: var(--cyan);  }
+  .chip[data-species="Gentoo"].active    { color: var(--ocean); background: #E4ECF2; border-color: var(--ocean); }
+  .chip[data-sex].active  { color: var(--ocean); background: var(--frost); border-color: var(--ocean); }
+  .island-chip.active { color: var(--ocean); background: var(--frost); border-color: var(--ocean); box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+
+  /* ===== STATS ===== */
+  .stats-count {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat {
+    background: var(--frost);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
+    transition: border-color 200ms ease;
+  }
+  .stat .v { font-size: 17px; font-weight: 700; color: var(--ocean); }
+  .stat .l { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .stat.x-feat { border-color: var(--teal); }
+  .stat.y-feat { border-color: var(--ocean); }
+
+  /* ===== INSIGHT PANEL ===== */
+  .insight-card {
+    border-left: 4px solid var(--teal);
+    background: linear-gradient(to right, #EAF6FD 0%, #fff 40%);
+  }
+  .insight-card h2 { color: var(--teal); }
+  .insight {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  /* ===== STAGE / CHARTS ===== */
+  .scatter-card {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .bar-card, .box-card {
+    display: flex;
+    flex-direction: column;
+  }
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(12px, 1.4vw, 24px);
+  }
+  .scatter-card .plot {
+    width: 100%;
+    height: clamp(340px, 44vh, 540px);
+  }
+  .bar-card .plot,
+  .box-card .plot {
+    width: 100%;
+    height: clamp(240px, 30vh, 340px);
+  }
+  .placeholder {
+    flex: none;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    color: var(--muted);
+    font-size: 14px;
+    gap: 6px;
+    height: clamp(340px, 44vh, 540px);
+    text-align: center;
+    padding: 16px;
+  }
+  .placeholder .big { font-size: 36px; line-height: 1; }
+
+  .zone:active { transform: scale(0.90); }
+
+  /* ===== ENTRANCE ANIMATION ===== */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: fadeUp 350ms ease both; }
+  .sidebar .card:nth-child(1) { animation-delay:   0ms; }
+  .sidebar .card:nth-child(2) { animation-delay:  60ms; }
+  .sidebar .card:nth-child(3) { animation-delay: 120ms; }
+  .scatter-card  { animation-delay:  80ms; }
+  .insight-card  { animation-delay: 140ms; }
+  .bar-card      { animation-delay: 200ms; }
+  .box-card      { animation-delay: 240ms; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    header { flex-direction: column; align-items: flex-start; gap: 4px; }
+  }
+
+  /* ===== K-MEANS BLOCK ===== */
+  .k-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    padding: 0 2px;
+  }
+  #kmeansInfo {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+    margin-bottom: 0;
+    line-height: 1.5;
+  }
+  /* Toggle button */
+  .kmeans-toggle {
+    padding: 4px 14px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    background: #fff;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 150ms ease;
+  }
+  .kmeans-toggle:hover { border-color: var(--teal); color: var(--teal); }
+  .kmeans-toggle.kmeans-on {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+  }
+  .kmeans-toggle:focus-visible { outline: 3px solid var(--ocean); outline-offset: 3px; }
+  .kmeans-toggle:disabled { opacity: 0.4; cursor: not-allowed; }
+  .kmeans-toggle:disabled:hover { border-color: var(--border); color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <button class="back-btn" aria-label="Go back">
+      <span aria-hidden="true">←</span>
+    </button>
+    <img src="vinuni_logo.png" alt="VinUni Logo" class="logo" />
+    <div class="course-info">
+      <div class="course-name">Data Visualization</div>
+      <div class="course-code">COMP4010</div>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <h1 class="title">Palmer Penguins · Island Detail Explorer</h1>
+    <div class="island-label"
+         id="islandLabel"
+         aria-live="polite"
+         aria-label="Current island filter: ALL ISLANDS">
+      ALL ISLANDS
+    </div>
+  </div>
+
+  <div class="header-right">
+    <!-- Spacer for center alignment -->
+  </div>
+</header>
+
+<main>
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" aria-label="Filters and axis selection">
+
+    <!-- Discovery Missions -->
+    <section class="card mission-card" aria-labelledby="missionHeading">
+      <h2 id="missionHeading">Discovery Missions</h2>
+      <div class="mission-grid">
+        <button class="mission-btn" data-mission="giants" aria-label="Start mission: Island of Giants">
+          <span class="icon">🏔️</span>
+          <div>
+            <span class="m-title">The Island of Giants</span>
+            <span class="m-desc">Find the heaviest penguins on Biscoe.</span>
+          </div>
+        </button>
+        <button class="mission-btn" data-mission="mystery" aria-label="Start mission: Bill Shape Mystery">
+          <span class="icon">🔍</span>
+          <div>
+            <span class="m-title">The Bill Shape Mystery</span>
+            <span class="m-desc">Compare survival tools on Dream island.</span>
+          </div>
+        </button>
+        <button class="mission-btn" data-mission="gender" aria-label="Start mission: The Gender Gap">
+          <span class="icon">⚖️</span>
+          <div>
+            <span class="m-title">The Gender Gap</span>
+            <span class="m-desc">See size differences between sexes.</span>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <!-- Penguin axis selector -->
+    <section class="card" aria-labelledby="selectorHeading">
+      <h2 id="selectorHeading">Select body measurements</h2>
+      <div class="penguin-wrap" id="penguinWrap">
+        <img src="penguin_all.png"
+             alt="Penguin diagram — click a measurement zone to assign it to the X or Y axis" />
+        <button class="zone"
+                data-feat="bill_length_mm"
+                style="left:76%; top:25%;"
+                aria-label="Bill length"
+                aria-pressed="false">
+          <span aria-hidden="true">BL</span>
+          <span class="zone-tooltip" aria-hidden="true">Bill Length (mm)</span>
+        </button>
+        <button class="zone"
+                data-feat="bill_depth_mm"
+                style="left:68%; top:31%;"
+                aria-label="Bill depth"
+                aria-pressed="false">
+          <span aria-hidden="true">BD</span>
+          <span class="zone-tooltip" aria-hidden="true">Bill Depth (mm)</span>
+        </button>
+        <button class="zone"
+                data-feat="flipper_length_mm"
+                style="left:30%; top:48%;"
+                aria-label="Flipper length"
+                aria-pressed="false">
+          <span aria-hidden="true">FL</span>
+          <span class="zone-tooltip" aria-hidden="true">Flipper Length (mm)</span>
+        </button>
+        <button class="zone"
+                data-feat="body_mass_g"
+                style="left:55%; top:64%;"
+                aria-label="Body mass"
+                aria-pressed="false">
+          <span aria-hidden="true">BM</span>
+          <span class="zone-tooltip" aria-hidden="true">Body Mass (grams)</span>
+        </button>
+      </div>
+
+      <div class="readout" id="readout" aria-live="polite" aria-atomic="true">
+        <div class="row">
+          <span class="badge x" aria-hidden="true">X</span>
+          <span id="xLabel">— pick a body part —</span>
+        </div>
+        <div class="row">
+          <span class="badge y" aria-hidden="true">Y</span>
+          <span id="yLabel">— pick a second part —</span>
+        </div>
+        <div class="fifo-hint" id="fifoHint" aria-live="polite">
+          Click a third dot to replace the oldest axis selection
+        </div>
+        <button class="reset-btn" id="resetBtn" aria-label="Reset axis selection">
+          Reset
+        </button>
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="card" aria-labelledby="filtersHeading">
+      <h2 id="filtersHeading">Filters</h2>
+
+      <div role="group" aria-label="Species filter" class="filter-row" id="speciesChips">
+        <button class="chip active" data-species="Adelie" aria-pressed="true">
+          <span class="dot" style="background:#FF6B6B" aria-hidden="true"></span>Adelie
+        </button>
+        <button class="chip active" data-species="Chinstrap" aria-pressed="true">
+          <span class="dot" style="background:#2E86AB" aria-hidden="true"></span>Chinstrap
+        </button>
+        <button class="chip active" data-species="Gentoo" aria-pressed="true">
+          <span class="dot" style="background:#1B4965" aria-hidden="true"></span>Gentoo
+        </button>
+      </div>
+
+      <div role="group" aria-label="Sex filter" class="filter-row" id="sexChips">
+        <button class="chip active" data-sex="male" aria-pressed="true">
+          <span aria-hidden="true">●</span> Male
+        </button>
+        <button class="chip active" data-sex="female" aria-pressed="true">
+          <span aria-hidden="true">◆</span> Female
+        </button>
+      </div>
+
+      <fieldset class="filter-row" id="islandChips" style="margin-bottom:0;">
+        <legend class="sr-only">Island filter</legend>
+        <label class="chip island-chip active">
+          <input type="radio" name="island" value="ALL" checked class="sr-only">
+          All Islands
+        </label>
+        <label class="chip island-chip">
+          <input type="radio" name="island" value="Biscoe" class="sr-only">
+          Biscoe
+        </label>
+        <label class="chip island-chip">
+          <input type="radio" name="island" value="Dream" class="sr-only">
+          Dream
+        </label>
+        <label class="chip island-chip">
+          <input type="radio" name="island" value="Torgersen" class="sr-only">
+          Torgersen
+        </label>
+      </fieldset>
+    </section>
+
+    <!-- Summary stats -->
+    <section class="card" aria-labelledby="statsHeading">
+      <h2 id="statsHeading">Summary stats</h2>
+      <div class="stats-count" id="statsCount" role="status" aria-live="polite">
+        Showing — penguins
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat" data-feat="bill_length_mm">
+          <div class="v" id="stat_bill_length_mm">—</div>
+          <div class="l"><span aria-hidden="true"></span> Bill length (mm)</div>
+        </div>
+        <div class="stat" data-feat="bill_depth_mm">
+          <div class="v" id="stat_bill_depth_mm">—</div>
+          <div class="l"><span aria-hidden="true"></span> Bill depth (mm)</div>
+        </div>
+        <div class="stat" data-feat="flipper_length_mm">
+          <div class="v" id="stat_flipper_length_mm">—</div>
+          <div class="l"><span aria-hidden="true"></span> Flipper (mm)</div>
+        </div>
+        <div class="stat" data-feat="body_mass_g">
+          <div class="v" id="stat_body_mass_g">—</div>
+          <div class="l"><span aria-hidden="true"></span> Mass (g)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- K-Means controls -->
+    <section class="card" aria-labelledby="kmeansCtrlHeading">
+      <h2 id="kmeansCtrlHeading">K-Means</h2>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <span style="font-size:13px; color:var(--muted);">Cluster overlay</span>
+        <button id="kmeansToggle"
+                class="kmeans-toggle"
+                aria-pressed="false"
+                aria-label="Toggle K-Means cluster overlay">OFF</button>
+      </div>
+      <p id="kmeansInfo"></p>
+    </section>
+
+  </aside>
+
+  <!-- ============ STAGE ============ -->
+  <section class="stage" aria-label="Charts">
+
+    <!-- Scatter — hero chart -->
+    <div class="card scatter-card" id="scatterCard">
+      <div class="scatter-layout">
+        <!-- Narrative Sidebar -->
+        <aside class="narrative-panel" id="narrativePanel" aria-live="polite">
+          <h3>Field Journal</h3>
+          <div class="story-text" id="narrativeStory">
+            Select body measurements on the penguin diagram to begin your exploration.
+          </div>
+          <div id="narrativeDetails">
+            <!-- Dynamic bullet points go here -->
+          </div>
+        </aside>
+
+        <!-- Plot Area -->
+        <div class="plot-area">
+          <h2 id="scatterTitle">Select measurements to explore</h2>
+          <div id="scatterPlot"
+               class="plot"
+               role="img"
+               aria-labelledby="scatterTitle"
+               aria-describedby="scatterDesc"></div>
+          <p id="scatterDesc" class="sr-only"></p>
+          <div class="placeholder" id="scatterPlaceholder">
+            <div class="big" aria-hidden="true">🐧</div>
+            <div style="font-weight:700; font-size: 16px; color: var(--ocean);">Welcome to the Palmer Penguins · Island Detail Explorer!</div>
+            <div>Click on the penguin diagram to choose measurements to explore</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insight -->
+    <section class="card insight-card" aria-labelledby="insightHeading">
+      <h2 id="insightHeading">Finding</h2>
+      <div class="insight" id="insight" aria-live="polite">
+        Select body measurements on the penguin diagram to discover biological insights.
+      </div>
+    </section>
+
+    <!-- Secondary charts row -->
+    <div class="charts-row">
+      <div class="card bar-card">
+        <h2 id="barTitle">Species distribution</h2>
+        <div id="barPlot"
+             class="plot"
+             role="img"
+             aria-labelledby="barTitle"
+             aria-describedby="barDesc"></div>
+        <p id="barDesc" class="sr-only"></p>
+      </div>
+      <div class="card box-card">
+        <h2 id="boxTitle">Body mass spread by species</h2>
+        <div id="boxPlot"
+             class="plot"
+             role="img"
+             aria-labelledby="boxTitle"
+             aria-describedby="boxDesc"></div>
+        <p id="boxDesc" class="sr-only"></p>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- ====== Embedded CSV (avoids fetch / CORS on file://) ====== -->
+<script id="penguin-csv" type="text/csv">
+
+</script>
+
+<script>
+//===================== CONFIG =====================
+const COLORS = {
+  Adelie:    "#FF6B6B",
+  Chinstrap: "#2E86AB",
+  Gentoo:    "#1B4965",
+  gray:      "#C8D8E4",
+  teal:      "#4DA8DA",
+  ocean:     "#1B4965",
+};
+const FEAT_LABEL = {
+  bill_length_mm:    "Bill Length (mm)",
+  bill_depth_mm:     "Bill Depth (mm)",
+  flipper_length_mm: "Flipper Length (mm)",
+  body_mass_g:       "Body Mass (g)",
+};
+const FEAT_SHORT = {
+  bill_length_mm:    "bill length",
+  bill_depth_mm:     "bill depth",
+  flipper_length_mm: "flipper length",
+  body_mass_g:       "body mass",
+};
+
+const BASE_LAYOUT = {
+  paper_bgcolor: "#fff",
+  plot_bgcolor:  "#fff",
+  font: { family: "-apple-system,Segoe UI,Roboto,sans-serif", color: "#1B2B3A" },
+};
+
+//===================== DATA & INITIALIZATION =====================
+let ALL_DATA = [];
+let MAX_SPECIES_COUNT = 0;
+let FEAT_RANGE = {};
+
+async function init() {
+  try {
+    const response = await fetch("penguins_clean.csv");
+    if (!response.ok) throw new Error("External CSV not found");
+    const text = await response.text();
+    ALL_DATA = parseCSV(text);
+    console.log("Loaded data from external penguins_clean.csv");
+  } catch (err) {
+    console.warn("Could not load external CSV (CORS or missing file). Falling back to embedded data.", err);
+    const embedded = document.getElementById("penguin-csv");
+    if (embedded) {
+      ALL_DATA = parseCSV(embedded.textContent);
+    } else {
+      console.error("No data found! Application will not function.");
+      return;
+    }
+  }
+
+  const SPECIES_LIST = ["Adelie","Chinstrap","Gentoo"];
+  MAX_SPECIES_COUNT = Math.ceil(Math.max(...SPECIES_LIST.map(sp => ALL_DATA.filter(r => r.species === sp).length)) * 1.15);
+
+  Object.keys(FEAT_LABEL).forEach(f => {
+    const vals = ALL_DATA.map(r => r[f]).filter(v => !isNaN(v));
+    const lo = Math.min(...vals);
+    const hi = Math.max(...vals);
+    const pad = (hi - lo) * 0.06;
+    FEAT_RANGE[f] = [lo - pad, hi + pad];
+  });
+
+  renderAll();
+}
+
+//===================== PARSE CSV =====================
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  const headers = lines.shift().split(",");
+  const numeric = new Set(["bill_length_mm","bill_depth_mm","flipper_length_mm","body_mass_g","year"]);
+  return lines.map(line => {
+    const cells = [];
+    let current = "", inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { cells.push(current); current = ""; }
+      else { current += ch; }
+    }
+    cells.push(current);
+    const row = {};
+    headers.forEach((h, i) => {
+      const v = cells[i];
+      row[h] = numeric.has(h) ? parseFloat(v) : v;
+    });
+    return row;
+  });
+}
+
+//===================== STATE =====================
+const state = {
+  selX:     null,
+  selY:     null,
+  order:    [],
+  species:  new Set(["Adelie","Chinstrap","Gentoo"]),
+  sex:      new Set(["male","female"]),
+  island:   "ALL",
+  mission:  null,
+  kmeansOn: false,
+};
+
+//===================== MISSIONS =====================
+const missions = {
+  giants: {
+    island: "Biscoe",
+    selX: "flipper_length_mm",
+    selY: "body_mass_g",
+    species: ["Adelie", "Chinstrap", "Gentoo"],
+    sex: ["male", "female"],
+    title: "The Island of Giants",
+    insight: "<b>Look at the blue cluster (Gentoo).</b> On Biscoe Island, they have evolved massive bodies and long flippers—almost like underwater wings—to dive deeper and stay warmer than the smaller Adelies."
+  },
+  mystery: {
+    island: "Dream",
+    selX: "bill_length_mm",
+    selY: "bill_depth_mm",
+    species: ["Adelie", "Chinstrap", "Gentoo"],
+    sex: ["male", "female"],
+    title: "The Bill Shape Mystery",
+    insight: "<b>Compare the red (Adelie) and teal (Chinstrap) clusters.</b> Even though they weigh about the same, Chinstraps have much longer, thinner bills, while Adelies have shorter, deeper bills. They evolved different 'tools' to hunt different prey in the same waters!"
+  },
+  gender: {
+    island: "ALL",
+    selX: "flipper_length_mm",
+    selY: "body_mass_g",
+    species: ["Adelie", "Chinstrap", "Gentoo"],
+    sex: ["male", "female"],
+    title: "The Gender Gap",
+    insight: "<b>Nature's consistent rule:</b> Across every species and island, males (circles) are consistently larger than females (diamonds). This is a biological fingerprint called 'Sexual Dimorphism' visible in every cluster."
+  }
+};
+
+function runMission(type) {
+  const m = missions[type];
+  if (!m) return;
+
+  state.mission = type;
+  state.island  = m.island;
+  state.selX    = m.selX;
+  state.selY    = m.selY;
+  state.order   = ["X", "Y"];
+  state.species = new Set(m.species);
+  state.sex     = new Set(m.sex);
+
+  document.querySelectorAll("#islandChips input[type='radio']").forEach(input => {
+    input.checked = (input.value === m.island);
+    input.closest(".chip").classList.toggle("active", input.checked);
+  });
+  const labelEl = document.getElementById("islandLabel");
+  const text = state.island === "ALL" ? "ALL ISLANDS" : state.island.toUpperCase() + " ISLAND";
+  labelEl.textContent = text;
+
+  document.querySelectorAll(".chip[data-species], .chip[data-sex]").forEach(c => {
+    const val = c.dataset.species || c.dataset.sex;
+    const active = state.species.has(val) || state.sex.has(val);
+    c.classList.toggle("active", active);
+    c.setAttribute("aria-pressed", active);
+  });
+
+  renderAll();
+}
+
+document.querySelectorAll(".mission-btn").forEach(btn => {
+  btn.addEventListener("click", () => { runMission(btn.dataset.mission); });
+});
+
+function clearMission() {
+  state.mission = null;
+  document.querySelectorAll(".mission-btn").forEach(b => b.classList.remove("active"));
+}
+
+//===================== HELPERS =====================
+function getFiltered() {
+  return ALL_DATA.filter(r =>
+    state.species.has(r.species) &&
+    state.sex.has(r.sex) &&
+    (state.island === "ALL" || r.island === state.island)
+  );
+}
+
+function mean(arr) {
+  const valid = arr.filter(v => v != null && !isNaN(v));
+  if (!valid.length) return null;
+  return valid.reduce((a, b) => a + b, 0) / valid.length;
+}
+
+function fmt(feat, val) {
+  if (val == null || isNaN(val)) return "—";
+  if (feat === "body_mass_g") return Math.round(val).toLocaleString() + " g";
+  return val.toFixed(1) + " mm";
+}
+
+//===================== ZONE INTERACTION =====================
+const zones = document.querySelectorAll(".zone");
+zones.forEach(z => {
+  z.addEventListener("click", () => selectFeature(z.dataset.feat));
+  z.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      selectFeature(z.dataset.feat);
+    }
+  });
+});
+
+function selectFeature(feat) {
+  clearMission();
+  if (state.selX === feat) {
+    state.selX = null;
+    state.order = state.order.filter(s => s !== "X");
+  } else if (state.selY === feat) {
+    state.selY = null;
+    state.order = state.order.filter(s => s !== "Y");
+  } else if (state.selX == null) {
+    state.selX = feat;
+    state.order.push("X");
+  } else if (state.selY == null) {
+    state.selY = feat;
+    state.order.push("Y");
+  } else {
+    const oldest = state.order.shift();
+    if (oldest === "X") { state.selX = feat; state.order.push("X"); }
+    else                { state.selY = feat; state.order.push("Y"); }
+  }
+  renderAll();
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  clearMission();
+  state.selX = null;
+  state.selY = null;
+  state.order = [];
+  renderAll();
+});
+
+//===================== FILTER CHIPS =====================
+document.querySelectorAll("#speciesChips .chip").forEach(c => {
+  c.addEventListener("click", () => {
+    clearMission();
+    const sp = c.dataset.species;
+    if (state.species.has(sp)) {
+      if (state.species.size === 1) return;
+      state.species.delete(sp);
+      c.classList.remove("active");
+      c.setAttribute("aria-pressed", "false");
+    } else {
+      state.species.add(sp);
+      c.classList.add("active");
+      c.setAttribute("aria-pressed", "true");
+    }
+    renderAll();
+  });
+});
+
+document.querySelectorAll("#sexChips .chip").forEach(c => {
+  c.addEventListener("click", () => {
+    clearMission();
+    const s = c.dataset.sex;
+    if (state.sex.has(s)) {
+      if (state.sex.size === 1) return;
+      state.sex.delete(s);
+      c.classList.remove("active");
+      c.setAttribute("aria-pressed", "false");
+    } else {
+      state.sex.add(s);
+      c.classList.add("active");
+      c.setAttribute("aria-pressed", "true");
+    }
+    renderAll();
+  });
+});
+
+document.querySelectorAll("#islandChips input[type='radio']").forEach(input => {
+  input.addEventListener("change", () => {
+    clearMission();
+    state.island = input.value;
+    document.querySelectorAll("#islandChips .chip").forEach(label => {
+      label.classList.remove("active");
+    });
+    input.closest(".chip").classList.add("active");
+    const labelEl = document.getElementById("islandLabel");
+    const text = state.island === "ALL" ? "ALL ISLANDS" : state.island.toUpperCase() + " ISLAND";
+    labelEl.textContent = text;
+    labelEl.setAttribute("aria-label", "Current island filter: " + text);
+    renderAll();
+  });
+});
+
+//===================== ZONE VISUAL UPDATE =====================
+function updateZones() {
+  zones.forEach(z => {
+    z.classList.remove("x-selected","y-selected");
+    if (z.dataset.feat === state.selX) {
+      z.classList.add("x-selected");
+      z.setAttribute("aria-pressed", "true");
+      z.setAttribute("aria-label", FEAT_LABEL[z.dataset.feat] + " — assigned to X axis");
+    } else if (z.dataset.feat === state.selY) {
+      z.classList.add("y-selected");
+      z.setAttribute("aria-pressed", "true");
+      z.setAttribute("aria-label", FEAT_LABEL[z.dataset.feat] + " — assigned to Y axis");
+    } else {
+      z.setAttribute("aria-pressed", "false");
+      z.setAttribute("aria-label", FEAT_LABEL[z.dataset.feat]);
+    }
+  });
+  document.getElementById("xLabel").textContent =
+    state.selX ? FEAT_LABEL[state.selX] : "— pick a body part —";
+  document.getElementById("yLabel").textContent =
+    state.selY ? FEAT_LABEL[state.selY] : "— pick a second part —";
+
+  const hint = document.getElementById("fifoHint");
+  hint.classList.toggle("visible", !!(state.selX && state.selY));
+}
+
+//===================== SCATTER =====================
+function renderScatter(data) {
+  const ph   = document.getElementById("scatterPlaceholder");
+  const plot = document.getElementById("scatterPlot");
+  const desc = document.getElementById("scatterDesc");
+
+  if (!state.selX || !state.selY) {
+    plot.style.display = "none";
+    ph.style.display   = "flex";
+    ph.innerHTML = state.selX
+      ? '<div class="big" aria-hidden="true"></div><div>Now pick a second body part for the Y axis</div>'
+      : '<div class="big" aria-hidden="true"></div><div style="font-weight:700; font-size: 16px; color: var(--ocean);">Welcome to the Palmer Penguins · Island Detail Explorer!</div><div>Click on the penguin diagram to choose measurements to explore</div>';
+    document.getElementById("scatterTitle").textContent = "Select measurements to explore";
+    desc.textContent = "No chart displayed yet. Use the penguin selector to choose X and Y measurements.";
+    document.getElementById("kmeansInfo").textContent = "";
+    return;
+  }
+
+  if (!data.length) {
+    plot.style.display = "none";
+    ph.style.display   = "flex";
+    ph.innerHTML = '<div class="big" aria-hidden="true">∅</div><div>No data — broaden your filters</div>';
+    document.getElementById("kmeansInfo").textContent = "";
+    return;
+  }
+
+  ph.style.display   = "none";
+  plot.style.display = "block";
+
+  const traces = [];
+  ["Adelie","Chinstrap","Gentoo"].forEach(sp => {
+    if (!state.species.has(sp)) return;
+    const rows = data.filter(r => r.species === sp);
+    if (!rows.length) return;
+    traces.push({
+      type: "scatter",
+      mode: "markers",
+      name: sp,
+      x: rows.map(r => r[state.selX]),
+      y: rows.map(r => r[state.selY]),
+      marker: {
+        color:   COLORS[sp],
+        size:    10,
+        opacity: 0.85,
+        symbol:  rows.map(r => r.sex === "male" ? "circle" : "diamond"),
+        line: { color: "#fff", width: 1 },
+      },
+      customdata: rows.map(r => [r.sex, r.island, r.bill_length_mm, r.bill_depth_mm, r.flipper_length_mm, r.body_mass_g]),
+      hovertemplate:
+        "<b>" + sp + "</b><br>" +
+        "Sex: %{customdata[0]}<br>" +
+        "Island: %{customdata[1]}<br>" +
+        "Bill L: %{customdata[2]} mm<br>" +
+        "Bill D: %{customdata[3]} mm<br>" +
+        "Flipper: %{customdata[4]} mm<br>" +
+        "Mass: %{customdata[5]:,} g" +
+        "<extra></extra>",
+    });
+  });
+
+  const byMean = {};
+  ["Adelie","Chinstrap","Gentoo"].forEach(sp => {
+    const rows = data.filter(r => r.species === sp);
+    if (rows.length) byMean[sp] = mean(rows.map(r => r[state.selY]));
+  });
+  const speciesPresent = Object.keys(byMean);
+  let title = FEAT_LABEL[state.selX] + " vs " + FEAT_LABEL[state.selY];
+  if (speciesPresent.length >= 2) {
+    const sorted = [...speciesPresent].sort((a, b) => byMean[b] - byMean[a]);
+    title = sorted[0].toUpperCase() + " HAVE THE HIGHEST " + FEAT_SHORT[state.selY].toUpperCase();
+  }
+  document.getElementById("scatterTitle").textContent = title;
+
+  const yTickFormat = state.selY === "body_mass_g" ? "," : "";
+
+  const layout = {
+    ...BASE_LAYOUT,
+    margin: { l: 60, r: 20, t: 10, b: 50 },
+    xaxis: {
+      title: {
+        text: "<b>" + FEAT_LABEL[state.selX] + "</b>",
+        font: { size: 15, color: "#1B4965" }
+      },
+      gridcolor: "#E8E8E8",
+      zerolinecolor: "#E8E8E8",
+    },
+    yaxis: {
+      title: {
+        text: "<b>" + FEAT_LABEL[state.selY] + "</b>",
+        font: { size: 15, color: "#1B4965" }
+      },
+      gridcolor: "#E8E8E8",
+      zerolinecolor: "#E8E8E8",
+      tickformat: yTickFormat,
+    },
+    legend: { orientation: "h", y: -0.12 },
+    transition: { duration: 400, easing: "cubic-in-out" },
+  };
+
+  // Overlay K-Means centroids and ellipses on top of species points
+  const kmOverlay = buildKMeansOverlay(data);
+  if (kmOverlay) {
+    traces.push(kmOverlay.centroidTrace);
+    layout.shapes = kmOverlay.shapes;
+  }
+
+  Plotly.react("scatterPlot", traces, layout, { displayModeBar: false, responsive: true });
+
+  const topSp = speciesPresent.length >= 2
+    ? [...speciesPresent].sort((a, b) => byMean[b] - byMean[a])[0]
+    : speciesPresent[0];
+  const n = data.length;
+  desc.textContent = `Scatter plot of ${FEAT_LABEL[state.selX]} versus ${FEAT_LABEL[state.selY]}. ` +
+    `Showing ${n} penguins. ${topSp || ""} trend toward the highest values on the Y axis. ` +
+    "Circle markers represent males, diamond markers represent females.";
+}
+
+//===================== BAR =====================
+function renderBar(data) {
+  const counts = { Adelie: 0, Chinstrap: 0, Gentoo: 0 };
+  data.forEach(r => { counts[r.species]++; });
+  const entries = Object.entries(counts)
+    .filter(([sp]) => state.species.has(sp))
+    .sort((a, b) => a[1] - b[1]);
+
+  const trace = {
+    type: "bar",
+    orientation: "h",
+    x: entries.map(e => e[1]),
+    y: entries.map(e => e[0]),
+    marker: { color: entries.map(e => COLORS[e[0]]) },
+    text: entries.map(e => e[1]),
+    textposition: "outside",
+    textfont: { weight: "bold" },
+    hovertemplate: "<b>%{y}</b><br>%{x} penguins<extra></extra>",
+  };
+
+  const top = [...entries].sort((a, b) => b[1] - a[1])[0];
+  let title = "Species distribution";
+  if (top && top[1] > 0) {
+    const totalRest = entries.reduce((s, e) => s + e[1], 0) - top[1];
+    if (entries.filter(e => e[1] > 0).length === 1) {
+      title = "ONLY " + top[0].toUpperCase() + " IN THIS VIEW";
+    } else if (top[1] > totalRest) {
+      title = top[0].toUpperCase() + " DOMINATE";
+    } else {
+      title = "MIXED COMMUNITY";
+    }
+  }
+  document.getElementById("barTitle").textContent = title;
+
+  Plotly.react("barPlot", [trace], {
+    ...BASE_LAYOUT,
+    margin: { l: 80, r: 40, t: 10, b: 50 },
+    xaxis: {
+      gridcolor: "#E8E8E8",
+      title: { text: "<b>Count</b>", font: { size: 15, color: "#1B4965" }, standoff: 15 },
+      range: [0, MAX_SPECIES_COUNT],
+      fixedrange: true,
+      tickfont: { weight: "bold" }
+    },
+    yaxis: { automargin: true, fixedrange: true, tickfont: { weight: "bold" } },
+    showlegend: false,
+    transition: { duration: 300, easing: "cubic-in-out" },
+  }, { displayModeBar: false, responsive: true });
+
+  const total = entries.reduce((s, e) => s + e[1], 0);
+  document.getElementById("barDesc").textContent =
+    `Horizontal bar chart showing species counts. Total ${total} penguins. ` +
+    entries.map(e => `${e[0]}: ${e[1]}`).join(", ") + ".";
+}
+
+//===================== BOXPLOT =====================
+function renderBox(data) {
+  const yFeat = state.selY || "body_mass_g";
+  const traces = [];
+  ["Adelie","Chinstrap","Gentoo"].forEach(sp => {
+    if (!state.species.has(sp)) return;
+    const rows = data.filter(r => r.species === sp);
+    if (!rows.length) return;
+    traces.push({
+      type: "box",
+      name: sp,
+      y: rows.map(r => r[yFeat]),
+      marker: { color: COLORS[sp] },
+      boxpoints: "outliers",
+      line: { color: COLORS[sp] },
+      fillcolor: COLORS[sp] + "55",
+    });
+  });
+
+  const medians = {};
+  ["Adelie","Chinstrap","Gentoo"].forEach(sp => {
+    if (!state.species.has(sp)) return;
+    const vals = [...data.filter(r => r.species === sp).map(r => r[yFeat])].sort((a, b) => a - b);
+    if (vals.length) medians[sp] = vals[Math.floor(vals.length / 2)];
+  });
+  const spList = Object.keys(medians);
+  let boxTitle = FEAT_LABEL[yFeat] + " by species";
+  if (spList.length >= 2) {
+    const sorted = [...spList].sort((a, b) => medians[b] - medians[a]);
+    boxTitle = sorted[0].toUpperCase() + " SKEW HEAVIER IN " + FEAT_SHORT[yFeat].toUpperCase();
+  }
+  document.getElementById("boxTitle").textContent = boxTitle;
+
+  const yTickFormat = yFeat === "body_mass_g" ? "," : "";
+
+  Plotly.react("boxPlot", traces, {
+    ...BASE_LAYOUT,
+    margin: { l: 80, r: 20, t: 10, b: 50 },
+    yaxis: {
+      gridcolor: "#E8E8E8",
+      title: { text: "<b>" + FEAT_LABEL[yFeat] + "</b>", font: { size: 15, color: "#1B4965" }, standoff: 15 },
+      tickformat: yTickFormat,
+      range: FEAT_RANGE[yFeat],
+      fixedrange: true,
+      tickfont: { weight: "bold" }
+    },
+    xaxis: {
+      gridcolor: "#E8E8E8",
+      title: { text: "<b>Species</b>", font: { size: 15, color: "#1B4965" }, standoff: 15 },
+      fixedrange: true,
+      tickfont: { weight: "bold" }
+    },
+    showlegend: false,
+    transition: { duration: 300, easing: "cubic-in-out" },
+  }, { displayModeBar: false, responsive: true });
+
+  document.getElementById("boxDesc").textContent =
+    `Box plot comparing ${FEAT_LABEL[yFeat]} distributions across species. ` +
+    spList.map(sp => `${sp} median: ${fmt(yFeat, medians[sp])}`).join(", ") + ".";
+}
+
+//===================== STATS =====================
+function renderStats(data) {
+  document.getElementById("statsCount").innerHTML = `Showing <b>${data.length}</b> penguins`;
+  ["bill_length_mm","bill_depth_mm","flipper_length_mm","body_mass_g"].forEach(f => {
+    const m = mean(data.map(r => r[f]));
+    document.getElementById("stat_" + f).textContent = fmt(f, m);
+  });
+  document.querySelectorAll(".stat").forEach(s => {
+    s.classList.remove("x-feat","y-feat");
+    if (s.dataset.feat === state.selX) s.classList.add("x-feat");
+    if (s.dataset.feat === state.selY) s.classList.add("y-feat");
+  });
+}
+
+//===================== INSIGHT =====================
+function renderInsight(data) {
+  const el = document.getElementById("insight");
+  const heading = document.getElementById("insightHeading");
+
+  document.querySelectorAll(".mission-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mission === state.mission);
+  });
+
+  if (!data.length) {
+    el.textContent = "No data with the current filters. Try broadening your selection.";
+    return;
+  }
+
+  if (state.mission && missions[state.mission]) {
+    heading.textContent = "Discovery: " + missions[state.mission].title;
+    el.innerHTML = missions[state.mission].insight;
+    return;
+  }
+
+  heading.textContent = "Finding";
+
+  if (!state.selX && !state.selY) {
+    el.innerHTML = "Select body measurements on the penguin diagram to discover biological insights.";
+    return;
+  }
+
+  const islandTxt = state.island === "ALL" ? "across all islands" : "on " + state.island + " Island";
+  const parts = ["<b>" + data.length + "</b> penguins shown " + islandTxt + "."];
+
+  if (state.selY) {
+    const byMean = {};
+    ["Adelie","Chinstrap","Gentoo"].forEach(sp => {
+      const rows = data.filter(r => r.species === sp);
+      if (rows.length) byMean[sp] = mean(rows.map(r => r[state.selY]));
+    });
+    const sps = [...Object.keys(byMean)].sort((a, b) => byMean[b] - byMean[a]);
+    if (sps.length >= 2) {
+      parts.push(
+        sps[0] + " have the highest average " + FEAT_SHORT[state.selY] +
+        " (" + fmt(state.selY, byMean[sps[0]]) + "), while " +
+        sps[sps.length - 1] + " have the lowest (" + fmt(state.selY, byMean[sps[sps.length - 1]]) + ")."
+      );
+    }
+  } else {
+    parts.push("Select a body measurement on the penguin diagram to see species relationships.");
+  }
+
+  if (state.sex.size === 2) {
+    const mMass = mean(data.filter(r => r.sex === "male").map(r => r.body_mass_g));
+    const fMass = mean(data.filter(r => r.sex === "female").map(r => r.body_mass_g));
+    if (mMass && fMass) {
+      const diff = ((mMass - fMass) / fMass * 100).toFixed(0);
+      parts.push("Males average " + diff + "% heavier than females in this view.");
+    }
+  }
+
+  el.innerHTML = parts.join(" ");
+}
+
+//===================== NARRATIVE =====================
+function renderNarrative(data) {
+  const storyEl   = document.getElementById("narrativeStory");
+  const detailsEl = document.getElementById("narrativeDetails");
+
+  if (!state.selX || !state.selY) {
+    storyEl.textContent = "Select body measurements on the penguin diagram to begin your exploration.";
+    detailsEl.innerHTML = "";
+    return;
+  }
+
+  if (!data.length) {
+    storyEl.textContent = "No data to analyze. Try broadening your filters.";
+    detailsEl.innerHTML = "";
+    return;
+  }
+
+  // --- 1. STORY TEXT ---
+  let story = "";
+  const axes = [state.selX, state.selY];
+
+  if (state.mission && missions[state.mission]) {
+    story = missions[state.mission].insight;
+  } else if (axes.includes("body_mass_g") && axes.includes("flipper_length_mm")) {
+    story = "<b>The Physics of Diving.</b> Penguins are 'underwater flyers.' This view shows the critical ratio between engine power (body mass) and wing surface (flipper length). Larger flippers are essential for the heavy Gentoo to maintain agility while hunting.";
+  } else if (axes.includes("bill_length_mm") && axes.includes("bill_depth_mm")) {
+    story = "<b>Dietary Niche Partitioning.</b> Biologists look at bill shape to understand what a penguin eats. Deep, short bills (Adelie) are perfect for crushing krill, while long, slender bills (Chinstrap) are better for snatching slippery fish.";
+  } else if (axes.includes("bill_length_mm") && axes.includes("body_mass_g")) {
+    story = "<b>Resource Acquisition.</b> This comparison reveals if larger penguins necessarily have longer reaches. Notice how species like Gentoo balance massive body reserves with efficient feeding tools.";
+  } else if (axes.includes("flipper_length_mm") && axes.includes("bill_depth_mm")) {
+    story = "<b>The Specialist's Blueprint.</b> This view contrasts locomotion (flippers) with feeding (bills). It often shows the clearest separation between the deep-diving Gentoos and the surface-feeding Adelies.";
+  } else {
+    story = "<b>Biological Fingerprints.</b> These specific dimensions allow researchers to identify species even from a distance. Every millimeter represents an evolutionary choice made for survival in the harsh Antarctic climate.";
+  }
+  storyEl.innerHTML = story;
+
+  // --- 2. DYNAMIC DETAILS ---
+  const details = [];
+
+  const heaviest = [...data].sort((a,b) => b.body_mass_g - a.body_mass_g)[0];
+  details.push(`<li>The heaviest penguin in view is a <span class="highlight">${heaviest.species}</span> at <span class="highlight">${fmt("body_mass_g", heaviest.body_mass_g)}</span>.</li>`);
+
+  if (axes.includes("body_mass_g") && axes.includes("flipper_length_mm")) {
+    const avgMass = mean(data.map(r => r.body_mass_g));
+    if (avgMass > 4500) {
+      details.push("<li>This population skews <b>heavy</b>, indicating high calorie availability in their habitat.</li>");
+    }
+  }
+
+  if (state.island !== "ALL") {
+    const naturalSpecies = new Set(ALL_DATA.filter(r => r.island === state.island).map(r => r.species));
+    if (naturalSpecies.size === 1) {
+      details.push(`<li><b>Island Fact:</b> ${state.island} is naturally a single-species colony for ${[...naturalSpecies][0]}s.</li>`);
+    } else {
+      details.push(`<li><b>Island Fact:</b> ${state.island} is a diverse hub shared by <span class="highlight">${naturalSpecies.size}</span> different species.</li>`);
+    }
+  }
+
+  const xVals = data.map(r => r[state.selX]);
+  const range = (Math.max(...xVals) - Math.min(...xVals)).toFixed(1);
+  details.push(`<li>The <span class="highlight">${FEAT_SHORT[state.selX]}</span> varies by <span class="highlight">${range}mm</span> across this selection.</li>`);
+
+  detailsEl.innerHTML = `<ul>${details.join("")}</ul>`;
+}
+
+//===================== K-MEANS TOGGLE SYNC =====================
+// Keeps the toggle button in sync with how many species are selected.
+// Must run before renderScatter so state.kmeansOn is correct when the overlay fires.
+function syncKMeansUI() {
+  const btn = document.getElementById("kmeansToggle");
+  if (state.species.size < 2) {
+    state.kmeansOn = false;
+    btn.textContent = "OFF";
+    btn.setAttribute("aria-pressed", "false");
+    btn.classList.remove("kmeans-on");
+    btn.disabled = true;
+  } else {
+    btn.disabled = false;
+  }
+}
+
+//===================== RENDER ALL =====================
+function renderAll() {
+  updateZones();
+  syncKMeansUI();
+  const filtered = getFiltered();   // computed ONCE, passed to all renders
+  renderScatter(filtered);
+  renderNarrative(filtered);
+  renderInsight(filtered);
+  renderBar(filtered);
+  renderBox(filtered);
+  renderStats(filtered);
+}
+
+//===================== K-MEANS ALGORITHM =====================
+// Colorblind-safe palette (Wong 2011) — distinct from species colors
+const KMEANS_COLORS  = ['#0072B2', '#E69F00', '#CC79A7', '#56B4E9', '#D55E00'];
+const KMEANS_SYMBOLS = ['circle', 'square', 'diamond', 'triangle-up', 'cross'];
+
+const KMeans = (() => {
+  function standardize(pts) {
+    const n = pts.length, d = pts[0].length;
+    const means = new Array(d).fill(0), stds = new Array(d).fill(0);
+    for (const p of pts) p.forEach((v, i) => { means[i] += v; });
+    means.forEach((s, i) => { means[i] = s / n; });
+    for (const p of pts) p.forEach((v, i) => { stds[i] += (v - means[i]) ** 2; });
+    stds.forEach((s, i) => { stds[i] = Math.sqrt(s / n) || 1; });
+    return pts.map(p => p.map((v, i) => (v - means[i]) / stds[i]));
+  }
+  function distSq(a, b) {
+    return a.reduce((sum, v, i) => sum + (v - b[i]) ** 2, 0);
+  }
+  function initPlusPlus(pts, k) {
+    const centers = [pts[Math.floor(Math.random() * pts.length)]];
+    for (let c = 1; c < k; c++) {
+      const dists = pts.map(p => Math.min(...centers.map(ct => distSq(p, ct))));
+      const total = dists.reduce((a, b) => a + b, 0);
+      let rand = Math.random() * total;
+      let chosen = pts[pts.length - 1];
+      for (let i = 0; i < pts.length; i++) {
+        rand -= dists[i];
+        if (rand <= 0) { chosen = pts[i]; break; }
+      }
+      centers.push(chosen);
+    }
+    return centers;
+  }
+  function assign(pts, centers) {
+    return pts.map(p => {
+      let minD = Infinity, minIdx = 0;
+      centers.forEach((c, i) => { const d = distSq(p, c); if (d < minD) { minD = d; minIdx = i; } });
+      return minIdx;
+    });
+  }
+  function recompute(pts, labels, k) {
+    const d = pts[0].length;
+    const sums = Array.from({ length: k }, () => new Array(d).fill(0));
+    const counts = new Array(k).fill(0);
+    pts.forEach((p, i) => { const c = labels[i]; p.forEach((v, j) => { sums[c][j] += v; }); counts[c]++; });
+    return sums.map((s, c) =>
+      counts[c] > 0 ? s.map(v => v / counts[c]) : pts[Math.floor(Math.random() * pts.length)]
+    );
+  }
+  function inertia(pts, labels, centers) {
+    return pts.reduce((sum, p, i) => sum + distSq(p, centers[labels[i]]), 0);
+  }
+  function fit(rawPts, k, maxIter = 300, nInit = 5) {
+    if (rawPts.length < k) return { labels: rawPts.map(() => 0), inertia: 0 };
+    const pts = standardize(rawPts);
+    let bestLabels = null, bestInertia = Infinity;
+    for (let run = 0; run < nInit; run++) {
+      let centers = initPlusPlus(pts, k);
+      let labels  = assign(pts, centers);
+      for (let iter = 0; iter < maxIter; iter++) {
+        const newCenters = recompute(pts, labels, k);
+        const newLabels  = assign(pts, newCenters);
+        const converged  = newLabels.every((l, i) => l === labels[i]);
+        centers = newCenters; labels = newLabels;
+        if (converged) break;
+      }
+      const iner = inertia(pts, labels, centers);
+      if (iner < bestInertia) { bestInertia = iner; bestLabels = labels; }
+    }
+    return { labels: bestLabels, inertia: bestInertia };
+  }
+  return { fit };
+})();
+
+//===================== K-MEANS OVERLAY (injected into scatter) =====================
+// Returns { centroidTrace, shapes } to add to the existing scatter plot, or null.
+function buildKMeansOverlay(data) {
+  const info = document.getElementById("kmeansInfo");
+
+  // K is always equal to the number of selected species (2 or 3).
+  // If fewer than 2 species are selected the overlay is unavailable.
+  if (state.species.size < 2) {
+    info.textContent = "Select ≥ 2 species to enable K-Means.";
+    return null;
+  }
+
+  if (!state.kmeansOn) {
+    info.textContent = "";
+    return null;
+  }
+
+  const k    = state.species.size;   // 2 or 3 — derived automatically
+  const xCol = state.selX;
+  const yCol = state.selY;
+
+  if (data.length < k) {
+    info.textContent = `Need ≥ ${k} points to cluster (${data.length} shown).`;
+    return null;
+  }
+
+  const pts    = data.map(r => [r[xCol], r[yCol]]);
+  const result = KMeans.fit(pts, k);
+  const labels = result.labels;
+
+  info.innerHTML =
+    `K&nbsp;=&nbsp;<b>${k}</b> &nbsp;|&nbsp; Inertia: <b>${result.inertia.toFixed(2)}</b> &nbsp;|&nbsp; n&nbsp;=&nbsp;<b>${data.length}</b>`;
+
+  const shapes     = [];
+  const centroidX  = [], centroidY  = [];
+  const centroidTx = [], centroidHv = [];
+
+  for (let c = 0; c < k; c++) {
+    const sub = data.filter((_, i) => labels[i] === c);
+    const xs  = sub.map(r => r[xCol]);
+    const ys  = sub.map(r => r[yCol]);
+    const n   = sub.length;
+    const cx  = xs.reduce((a, b) => a + b, 0) / n;
+    const cy  = ys.reduce((a, b) => a + b, 0) / n;
+    const sx  = n > 1 ? Math.sqrt(xs.reduce((s, v) => s + (v - cx) ** 2, 0) / (n - 1)) : 0;
+    const sy  = n > 1 ? Math.sqrt(ys.reduce((s, v) => s + (v - cy) ** 2, 0) / (n - 1)) : 0;
+
+    centroidX.push(cx); centroidY.push(cy);
+    centroidTx.push(`C${c + 1}`);
+    centroidHv.push(
+      `<b>Cluster ${c + 1} — Centroid</b><br>` +
+      `${FEAT_LABEL[xCol]}: ${cx.toFixed(2)}<br>` +
+      `${FEAT_LABEL[yCol]}: ${cy.toFixed(2)}<br>` +
+      `n = ${n} penguins`
+    );
+
+    if (sx > 0 && sy > 0) {
+      shapes.push({
+        type: "circle", xref: "x", yref: "y",
+        x0: cx - 2 * sx, y0: cy - 2 * sy,
+        x1: cx + 2 * sx, y1: cy + 2 * sy,
+        line: { color: KMEANS_COLORS[c], width: 2, dash: "dot" },
+        fillcolor: KMEANS_COLORS[c], opacity: 0.08,
+      });
+    }
+  }
+
+  const centroidTrace = {
+    type: "scatter", mode: "markers+text",
+    name: `K-Means (K=${k})`,
+    x: centroidX, y: centroidY,
+    text: centroidTx, textposition: "top center",
+    textfont: { color: "#1B2B3A", size: 11 },
+    hovertext: centroidHv, hoverinfo: "text",
+    marker: {
+      symbol: "star", size: 16,
+      color: KMEANS_COLORS.slice(0, k),
+      line: { width: 1.5, color: "#fff" },
+    },
+  };
+
+  return { centroidTrace, shapes };
+}
+
+// Toggle ON / OFF
+document.getElementById("kmeansToggle").addEventListener("click", function () {
+  state.kmeansOn = !state.kmeansOn;
+  this.textContent = state.kmeansOn ? "ON" : "OFF";
+  this.setAttribute("aria-pressed", state.kmeansOn);
+  this.classList.toggle("kmeans-on", state.kmeansOn);
+  renderAll();
+});
+
+init();
+
+//===================== RESIZE — debounced =====================
+function resizePlots() {
+  ["scatterPlot","barPlot","boxPlot"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.style.display !== "none" && el._fullLayout) Plotly.Plots.resize(el);
+  });
+}
+
+let resizeTimer;
+new ResizeObserver(() => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(resizePlots, 150);
+}).observe(document.querySelector(".stage"));
+// Note: window resize listener removed — ResizeObserver already covers it
+</script>
+</body>
+</html>
