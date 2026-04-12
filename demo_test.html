@@ -9,19 +9,6 @@
 
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
-    header {
-  display: flex;
-  flex-direction: column; /* Stack the title and the label vertically */
-  align-items: center;    /* Center them horizontally */
-  justify-content: center;
-  text-align: center;     /* Ensures text wraps nicely if on mobile */
-  padding: 20px;          /* Optional: adds some breathing room */
-}
-
-.island-label {
-  display: block;         /* Ensures it takes up its own line */
-  width: 100%;            /* Helps with the centering alignment */
-}
   /* ===== DESIGN TOKENS ===== */
   :root {
     --bg:      #F4FAFF;
@@ -68,15 +55,88 @@
   header {
     background: var(--ocean);
     color: #fff;
-    padding: 14px 24px;
+    padding: 8px 24px;
     display: flex; align-items: center; justify-content: space-between;
     box-shadow: 0 2px 6px rgba(27,73,101,0.15);
     position: sticky;
     top: 0;
     z-index: 100;
+    height: 80px; /* increased height for two-line center */
   }
-  header .title { font-size: 18px; font-weight: 600; letter-spacing: 0.5px; margin: 0; }
-  header .island-label { font-size: 20px; letter-spacing: 2px; font-weight: 700; }
+  .header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+  .header-right { justify-content: flex-end; } /* empty for balance */
+
+  .back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 150ms ease;
+    text-decoration: none;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  .back-btn:active { transform: scale(0.92); }
+  .back-btn span {
+    font-size: 28px;
+    font-weight: 900;
+    display: inline-block;
+    transform: translateY(-2px); /* optical alignment for the large arrow */
+  }
+
+  .logo {
+    height: 44px;
+    width: auto;
+    filter: brightness(0) invert(1);
+  }
+  .course-info {
+    font-size: 13px;
+    line-height: 1.2;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    padding-left: 12px;
+    display: flex;
+    flex-direction: column;
+  }
+  .course-name { font-weight: 700; letter-spacing: 0.3px; }
+  .course-code { font-weight: 400; opacity: 0.9; }
+
+  .header-center {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  header .title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0;
+    text-align: center;
+  }
+  header .island-label {
+    font-size: 16px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    opacity: 0.9;
+    text-align: center;
+  }
 
   /* ===== LAYOUT ===== */
   main {
@@ -452,15 +512,29 @@
 <body>
 
 <header>
-  <!-- h1 for proper heading hierarchy -->
-  <h1 class="title">
-    <span aria-hidden="true"></span> Palmer Penguins · Island Detail Explorer
-  </h1>
-  <div class="island-label"
-       id="islandLabel"
-       aria-live="polite"
-       aria-label="Current island filter: ALL ISLANDS">
-    ALL ISLANDS
+  <div class="header-left">
+    <button class="back-btn" aria-label="Go back">
+      <span aria-hidden="true">←</span>
+    </button>
+    <img src="vinuni_logo.png" alt="VinUni Logo" class="logo" />
+    <div class="course-info">
+      <div class="course-name">Data Visualization</div>
+      <div class="course-code">COMP4010</div>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <h1 class="title">Palmer Penguins · Island Detail Explorer</h1>
+    <div class="island-label"
+         id="islandLabel"
+         aria-live="polite"
+         aria-label="Current island filter: ALL ISLANDS">
+      ALL ISLANDS
+    </div>
+  </div>
+
+  <div class="header-right">
+    <!-- Spacer for center alignment -->
   </div>
 </header>
 
@@ -513,11 +587,11 @@
       <div class="readout" id="readout" aria-live="polite" aria-atomic="true">
         <div class="row">
           <span class="badge x" aria-hidden="true">X</span>
-          <span id="xLabel">Flipper Length (mm)</span>
+          <span id="xLabel">— pick a body part —</span>
         </div>
         <div class="row">
           <span class="badge y" aria-hidden="true">Y</span>
-          <span id="yLabel">Body Mass (grams)</span>
+          <span id="yLabel">— pick a second part —</span>
         </div>
         <!-- FIFO hint: only visible when both slots are filled -->
         <div class="fifo-hint" id="fifoHint" aria-live="polite">
@@ -589,25 +663,25 @@
         <div class="stat" data-feat="bill_length_mm">
           <div class="v" id="stat_bill_length_mm">—</div>
           <div class="l">
-            <span aria-hidden="true">📏</span> Bill length (mm)
+            <span aria-hidden="true"></span> Bill length (mm)
           </div>
         </div>
         <div class="stat" data-feat="bill_depth_mm">
           <div class="v" id="stat_bill_depth_mm">—</div>
           <div class="l">
-            <span aria-hidden="true">📐</span> Bill depth (mm)
+            <span aria-hidden="true"></span> Bill depth (mm)
           </div>
         </div>
         <div class="stat" data-feat="flipper_length_mm">
           <div class="v" id="stat_flipper_length_mm">—</div>
           <div class="l">
-            <span aria-hidden="true">🦶</span> Flipper (mm)
+            <span aria-hidden="true"></span> Flipper (mm)
           </div>
         </div>
         <div class="stat" data-feat="body_mass_g">
           <div class="v" id="stat_body_mass_g">—</div>
           <div class="l">
-            <span aria-hidden="true">⚖️</span> Mass (g)
+            <span aria-hidden="true"></span> Mass (g)
           </div>
         </div>
       </div>
@@ -620,7 +694,7 @@
 
     <!-- Scatter — hero chart, starts populated with default axes -->
     <div class="card scatter-card" id="scatterCard">
-      <h2 id="scatterTitle">Flipper Length vs Body Mass</h2>
+      <h2 id="scatterTitle">Select measurements to explore</h2>
       <div id="scatterPlot"
            class="plot"
            role="img"
@@ -637,7 +711,7 @@
     <section class="card insight-card" aria-labelledby="insightHeading">
       <h2 id="insightHeading">Finding</h2>
       <div class="insight" id="insight" aria-live="polite">
-        Comparing flipper length vs body mass across all islands.
+        Select body measurements on the penguin diagram to discover biological insights.
       </div>
     </section>
 
@@ -765,9 +839,9 @@ function parseCSV(text) {
 
 //===================== STATE — default axes on load =====================
 const state = {
-  selX:    "flipper_length_mm",
-  selY:    "body_mass_g",
-  order:   ["X", "Y"],
+  selX:    null,
+  selY:    null,
+  order:   [],
   species: new Set(["Adelie","Chinstrap","Gentoo"]),
   sex:     new Set(["male","female"]),
   island:  "ALL",
@@ -927,7 +1001,7 @@ function renderScatter(data) {
     ph.style.display   = "flex";
     ph.innerHTML = state.selX
       ? '<div class="big" aria-hidden="true"></div><div>Now pick a second body part for the Y axis</div>'
-      : '<div class="big" aria-hidden="true"></div><div>Click on the penguin diagram to choose measurements to explore</div>';
+      : '<div class="big" aria-hidden="true"></div><div style="font-weight:700; font-size: 16px; color: var(--ocean);">Welcome to the Palmer Penguins · Island Detail Explorer!</div><div>Click on the penguin diagram to choose measurements to explore</div>';
     document.getElementById("scatterTitle").textContent = "Select measurements to explore";
     desc.textContent = "No chart displayed yet. Use the penguin selector to choose X and Y measurements.";
     return;
@@ -1153,7 +1227,7 @@ function renderBox(data) {
 
 //===================== STATS =====================
 function renderStats(data) {
-  document.getElementById("statsCount").textContent = `Showing ${data.length} penguins`;
+  document.getElementById("statsCount").innerHTML = `Showing <b>${data.length}</b> penguins`;
   ["bill_length_mm","bill_depth_mm","flipper_length_mm","body_mass_g"].forEach(f => {
     const m = mean(data.map(r => r[f]));
     document.getElementById("stat_" + f).textContent = fmt(f, m);
@@ -1173,8 +1247,14 @@ function renderInsight(data) {
     return;
   }
 
+  // Initial fresh state
+  if (!state.selX && !state.selY) {
+    el.innerHTML = "Select body measurements on the penguin diagram to discover biological insights.";
+    return;
+  }
+
   const islandTxt = state.island === "ALL" ? "across all islands" : "on " + state.island + " Island";
-  const parts = [data.length + " penguins shown " + islandTxt + "."];
+  const parts = ["<b>" + data.length + "</b> penguins shown " + islandTxt + "."];
 
   if (state.selY) {
     const byMean = {};
@@ -1203,7 +1283,7 @@ function renderInsight(data) {
     }
   }
 
-  el.textContent = parts.join(" ");
+  el.innerHTML = parts.join(" ");
 }
 
 //===================== RENDER ALL =====================
