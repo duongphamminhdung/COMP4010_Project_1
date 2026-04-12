@@ -32,3 +32,9 @@ logs/
 # Temporary files
 *.tmp
 .cache/
+
+# Master branch merges
+demo1/
+.claude/
+__pycache__/
+*.pyc
