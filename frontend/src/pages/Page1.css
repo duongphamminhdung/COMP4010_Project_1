@@ -1,65 +1,95 @@
-/* Page 1 Styles - Dũng */
+/* Page 1 Styles – Matching Page 2 palette */
 
 .page1-container {
+  --bg:      #F4FAFF;
+  --frost:   #E8F4FD;
+  --ocean:   #1B4965;
+  --teal:    #4DA8DA;
+  --text:    #1B2B3A;
+  --muted:   #4A6A78;
+  --border:  #D0E8F5;
+
   min-height: 100vh;
-  background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
-  color: #FFFFFF;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
+/* ===== HEADER (matches Page2) ===== */
 .page1-header {
-  background-color: #000000;
-  color: #FFFFFF;
-  padding: 40px 20px;
-  text-align: center;
+  background: var(--ocean);
+  color: #fff;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(27,73,101,0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 80px;
 }
 
-.page1-header h1 {
-  font-size: 48px;
-  margin-bottom: 10px;
+.page1-header .header-left,
+.page1-header .header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+.page1-header .header-right { justify-content: flex-end; }
+
+.page1-header .logo {
+  height: 44px;
+  width: auto;
+  filter: brightness(0) invert(1);
 }
 
-.page1-header p {
-  font-size: 18px;
-  opacity: 0.9;
+.page1-header .course-info {
+  font-size: 13px;
+  line-height: 1.2;
+  border-left: 1px solid rgba(255,255,255,0.3);
+  padding-left: 12px;
+  display: flex;
+  flex-direction: column;
+}
+.page1-header .course-name { font-weight: 700; letter-spacing: 0.3px; }
+.page1-header .course-code { font-weight: 400; opacity: 0.9; }
+
+.page1-header .header-center {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
 }
 
-.island-selection {
-  max-width: 1200px;
-  margin: 60px auto;
-  padding: 0 20px;
-}
-
-.island-selection h2 {
-  text-align: center;
-  font-size: 36px;
-  margin-bottom: 40px;
-}
-
-.island-cards-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
-  margin-bottom: 40px;
-}
-
-.page1-footer {
-  background-color: #A5D8FF;
-  padding: 20px;
-  text-align: center;
+.page1-header .title {
+  font-size: 20px;
   font-weight: 600;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-align: center;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .page1-header h1 {
-    font-size: 32px;
-  }
+.page1-header .subtitle {
+  font-size: 14px;
+  letter-spacing: 1px;
+  font-weight: 400;
+  opacity: 0.8;
+  text-align: center;
+}
 
-  .island-selection h2 {
-    font-size: 28px;
+/* ===== Responsive ===== */
+@media (max-width: 700px) {
+  .page1-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    height: auto;
+    padding: 12px 16px;
   }
-
-  .island-cards-container {
-    grid-template-columns: 1fr;
-  }
+  .page1-header .title { font-size: 16px; }
+  .page1-header .header-center { align-items: flex-start; }
 }
