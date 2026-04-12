@@ -1,12 +1,12 @@
 // Main App Component - Dũng
 import React from 'react';
-import Page1 from './pages/Page1';
+import Page3 from './pages/Page3';
 import './App.css';
 
 function App() {
   return (
     <div className="App">
-      <Page1 />
+      <Page3 />
     </div>
   );
 }

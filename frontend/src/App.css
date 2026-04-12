@@ -2,7 +2,8 @@
 
 .App {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+  /* Match Page 3 Antarctic Ice page background */
+  background: #f4faff;
 }
 
 * {
@@ -17,6 +18,5 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
-  background-attachment: fixed;
+  background: #f4faff;
 }
