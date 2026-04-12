@@ -438,6 +438,14 @@
   /* Island radio chips */
   .island-chip.active { color: var(--ocean); background: var(--frost); border-color: var(--ocean); box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
 
+  /* Species chip unavailable on the selected island */
+  .chip[data-species].unavailable {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+    border-style: dashed;
+  }
+
   /* ===== STATS ===== */
   .stats-count {
     font-size: 12px;
@@ -850,6 +858,14 @@ const FEAT_SHORT = {
   body_mass_g:       "body mass",
 };
 
+// Which species are actually present on each island
+const ISLAND_SPECIES = {
+  ALL:       ["Adelie", "Chinstrap", "Gentoo"],
+  Biscoe:    ["Adelie", "Gentoo"],
+  Dream:     ["Adelie", "Chinstrap"],
+  Torgersen: ["Adelie"],
+};
+
 // Shared layout base — single source of truth
 const BASE_LAYOUT = {
   paper_bgcolor: "#fff",
@@ -936,7 +952,7 @@ const missions = {
     island: "Biscoe",
     selX: "flipper_length_mm",
     selY: "body_mass_g",
-    species: ["Adelie", "Chinstrap", "Gentoo"],
+    species: ["Adelie", "Gentoo"],
     sex: ["male", "female"],
     title: "The Island of Giants",
     insight: "<b>Look at the blue cluster (Gentoo).</b> On Biscoe Island, they have evolved massive bodies and long flippers—almost like underwater wings—to dive deeper and stay warmer than the smaller Adelies."
@@ -945,7 +961,7 @@ const missions = {
     island: "Dream",
     selX: "bill_length_mm",
     selY: "bill_depth_mm",
-    species: ["Adelie", "Chinstrap", "Gentoo"],
+    species: ["Adelie", "Chinstrap"],
     sex: ["male", "female"],
     title: "The Bill Shape Mystery",
     insight: "<b>Compare the red (Adelie) and teal (Chinstrap) clusters.</b> Even though they weigh about the same, Chinstraps have much longer, thinner bills, while Adelies have shorter, deeper bills. They evolved different 'tools' to hunt different prey in the same waters!"
@@ -982,13 +998,15 @@ function runMission(type) {
   const text = state.island === "ALL" ? "ALL ISLANDS" : state.island.toUpperCase() + " ISLAND";
   labelEl.textContent = text;
 
-  // Update Filter Chips UI
-  document.querySelectorAll(".chip[data-species], .chip[data-sex]").forEach(c => {
-    const val = c.dataset.species || c.dataset.sex;
-    const active = state.species.has(val) || state.sex.has(val);
+  // Update sex chips
+  document.querySelectorAll(".chip[data-sex]").forEach(c => {
+    const active = state.sex.has(c.dataset.sex);
     c.classList.toggle("active", active);
     c.setAttribute("aria-pressed", active);
   });
+
+  // Apply island constraints (sets active/unavailable on species chips)
+  applyIslandSpeciesConstraints(state.island);
 
   renderAll();
 }
@@ -1106,6 +1124,35 @@ document.querySelectorAll("#sexChips .chip").forEach(c => {
   });
 });
 
+// Constrain species chips to those that actually exist on the selected island.
+// Updates state.species, chip active states, and unavailable styling.
+function applyIslandSpeciesConstraints(island) {
+  const valid = new Set(ISLAND_SPECIES[island] || ISLAND_SPECIES.ALL);
+
+  // Remove from state any species not present on this island
+  ["Adelie", "Chinstrap", "Gentoo"].forEach(sp => {
+    if (!valid.has(sp)) state.species.delete(sp);
+  });
+
+  // If nothing remains selected, activate all valid species
+  if (state.species.size === 0) valid.forEach(sp => state.species.add(sp));
+
+  // Sync chip appearance
+  document.querySelectorAll("#speciesChips .chip[data-species]").forEach(c => {
+    const sp = c.dataset.species;
+    if (valid.has(sp)) {
+      c.classList.remove("unavailable");
+      const isActive = state.species.has(sp);
+      c.classList.toggle("active", isActive);
+      c.setAttribute("aria-pressed", String(isActive));
+    } else {
+      c.classList.remove("active");
+      c.classList.add("unavailable");
+      c.setAttribute("aria-pressed", "false");
+    }
+  });
+}
+
 // Island — radio inputs
 document.querySelectorAll("#islandChips input[type='radio']").forEach(input => {
   input.addEventListener("change", () => {
@@ -1121,6 +1168,8 @@ document.querySelectorAll("#islandChips input[type='radio']").forEach(input => {
     const text = state.island === "ALL" ? "ALL ISLANDS" : state.island.toUpperCase() + " ISLAND";
     labelEl.textContent = text;
     labelEl.setAttribute("aria-label", "Current island filter: " + text);
+    // Constrain species chips to those present on the selected island
+    applyIslandSpeciesConstraints(state.island);
     renderAll();
   });
 });
