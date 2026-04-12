@@ -7,14 +7,46 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
   Legend,
+  Tooltip,
 } from "recharts";
 
 const FEATURES = [
-  { key: "body_mass_g", label: "Body Mass" },
-  { key: "flipper_length_mm", label: "Flipper Length" },
-  { key: "bill_length_mm", label: "Bill Length" },
-  { key: "bill_depth_mm", label: "Bill Depth" },
+  { key: "body_mass_g", label: "Body Mass", unit: "g" },
+  { key: "flipper_length_mm", label: "Flipper Length", unit: "mm" },
+  { key: "bill_length_mm", label: "Bill Length", unit: "mm" },
+  { key: "bill_depth_mm", label: "Bill Depth", unit: "mm" },
 ];
+
+function RadarTooltip({ active, payload, label, labelA, labelB }) {
+  if (!active || !payload || !payload.length) return null;
+  const entry = payload[0]?.payload;
+  if (!entry) return null;
+  const feat = FEATURES.find((f) => f.label === entry.feature);
+  const unit = feat?.unit ?? "";
+  return (
+    <div
+      style={{
+        background: "#1b4965",
+        border: "1px solid #a9d6e5",
+        borderRadius: 8,
+        padding: "10px 14px",
+        color: "#f4faff",
+        fontSize: 13,
+        lineHeight: 1.6,
+      }}
+    >
+      <div style={{ fontWeight: 700, marginBottom: 4 }}>{entry.feature}</div>
+      <div style={{ color: "#a9d6e5" }}>
+        <span style={{ color: "#4da8da", fontWeight: 600 }}>{labelA}:</span>{" "}
+        {entry.rawA != null ? `${entry.rawA.toFixed(1)} ${unit}` : "N/A"}
+      </div>
+      <div style={{ color: "#a9d6e5" }}>
+        <span style={{ color: "#c9799a", fontWeight: 600 }}>{labelB}:</span>{" "}
+        {entry.rawB != null ? `${entry.rawB.toFixed(1)} ${unit}` : "N/A"}
+      </div>
+    </div>
+  );
+}
 
 function RadarChartComponent({ groupA, groupB, labelA, labelB, annotation = "" }) {
   const radarData = useMemo(() => {
@@ -46,6 +78,7 @@ function RadarChartComponent({ groupA, groupB, labelA, labelB, annotation = "" }
               tick={{ fill: "#0b2545", fontSize: 13, fontWeight: 600 }}
             />
             <PolarRadiusAxis domain={[0, 1]} stroke="#a9d6e5" tick={false} axisLine={false} />
+            <Tooltip content={<RadarTooltip labelA={labelA} labelB={labelB} />} />
             <Radar name={labelA} dataKey="groupA" stroke="#2e86bb" fill="#4da8da" fillOpacity={0.32} strokeWidth={2} />
             <Radar name={labelB} dataKey="groupB" stroke="#a85478" fill="#c9799a" fillOpacity={0.32} strokeWidth={2} />
             <Legend

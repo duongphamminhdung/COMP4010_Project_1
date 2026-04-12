@@ -12,10 +12,10 @@ import {
 } from "recharts";
 
 const FEATURE_META = [
-  { key: "body_mass_g", label: "Body Mass" },
-  { key: "flipper_length_mm", label: "Flipper Length" },
-  { key: "bill_length_mm", label: "Bill Length" },
-  { key: "bill_depth_mm", label: "Bill Depth" },
+  { key: "body_mass_g", label: "Body Mass", unit: "g" },
+  { key: "flipper_length_mm", label: "Flipper Length", unit: "mm" },
+  { key: "bill_length_mm", label: "Bill Length", unit: "mm" },
+  { key: "bill_depth_mm", label: "Bill Depth", unit: "mm" },
 ];
 
 /** Group A vs B — consistent with CSS --group-a / --group-b vars. */
@@ -46,7 +46,9 @@ function percentGapBetweenMeans(groupA, groupB, key) {
 
 function DifferenceBarChart({ groupA, groupB, labelA, labelB, annotation = "" }) {
   const data = useMemo(() => {
-    return FEATURE_META.map(({ key, label }) => {
+    return FEATURE_META.map(({ key, label, unit }) => {
+      const aVal = groupA?.[key];
+      const bVal = groupB?.[key];
       const gap = percentGapBetweenMeans(groupA, groupB, key);
       if (gap == null) {
         return {
@@ -56,6 +58,9 @@ function DifferenceBarChart({ groupA, groupB, labelA, labelB, annotation = "" })
           hasPct: false,
           higherIsB: null,
           tie: null,
+          meanA: null,
+          meanB: null,
+          unit,
         };
       }
       const { pct, higherIsB, tie } = gap;
@@ -66,6 +71,9 @@ function DifferenceBarChart({ groupA, groupB, labelA, labelB, annotation = "" })
         hasPct: true,
         higherIsB,
         tie,
+        meanA: aVal != null ? Number(aVal) : null,
+        meanB: bVal != null ? Number(bVal) : null,
+        unit,
       };
     });
   }, [groupA, groupB]);
@@ -119,13 +127,16 @@ function DifferenceBarChart({ groupA, groupB, labelA, labelB, annotation = "" })
                 const row = props?.payload;
                 if (!row?.hasPct) return ["N/A", "Gap between means"];
                 const pct = Number(val).toFixed(1);
+                const u = row.unit || "";
+                const aStr = row.meanA != null ? `${row.meanA.toFixed(1)} ${u}` : "N/A";
+                const bStr = row.meanB != null ? `${row.meanB.toFixed(1)} ${u}` : "N/A";
                 if (row.tie) {
-                  return [`${pct}%`, "Same mean for both groups"];
+                  return [`Both groups: ${aStr}`, "Same mean"];
                 }
                 const larger = row.higherIsB ? labelB : labelA;
                 return [
-                  `${pct}% above the smaller mean`,
-                  `Larger mean: ${larger}`,
+                  `${pct}% difference\n${labelA}: ${aStr}\n${labelB}: ${bStr}`,
+                  `Winner: ${larger}`,
                 ];
               }}
               labelFormatter={(name) => name}

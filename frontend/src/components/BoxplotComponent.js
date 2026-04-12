@@ -28,15 +28,15 @@ function categoryLabelForAxis(fullLabel) {
   return fullLabel;
 }
 
-function boxHoverTemplate() {
+function boxHoverTemplate(groupLabel, featureLabel) {
   return (
-    "max: %{max}<br>" +
-    "upper fence: %{upperfence}<br>" +
-    "q3: %{q3}<br>" +
-    "median: %{median}<br>" +
-    "q1: %{q1}<br>" +
-    "lower fence: %{lowerfence}<br>" +
-    "min: %{min}<extra></extra>"
+    `<b>${groupLabel}</b><br>` +
+    `<b>${featureLabel}</b><br>` +
+    "Max: %{max}<br>" +
+    "Q3 (75th): %{q3}<br>" +
+    "Median: %{median}<br>" +
+    "Q1 (25th): %{q1}<br>" +
+    "Min: %{min}<extra></extra>"
   );
 }
 
@@ -107,7 +107,7 @@ function BoxplotComponent({
             boxwidth: 0.42,
             /* One hover target per box — avoids Plotly splitting median vs whiskers to opposite sides. */
             hoveron: "boxes",
-            hovertemplate: boxHoverTemplate(),
+            hovertemplate: boxHoverTemplate(labelA, featureLabel),
           },
           {
             y: valuesB,
@@ -120,7 +120,7 @@ function BoxplotComponent({
             boxpoints: "suspectedoutliers",
             boxwidth: 0.42,
             hoveron: "boxes",
-            hovertemplate: boxHoverTemplate(),
+            hovertemplate: boxHoverTemplate(labelB, featureLabel),
           },
         ]}
         config={{

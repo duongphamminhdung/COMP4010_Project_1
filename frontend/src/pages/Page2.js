@@ -1,6 +1,6 @@
 // Page 2 - Phuc (converted from demo_test.html to React)
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import Plotly from 'plotly.js/dist/plotly-basic.min';
+import Plotly from 'plotly.js/dist/plotly-cartesian.min';
 import './Page2.css';
 
 // ===================== CONFIG =====================
