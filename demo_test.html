@@ -190,6 +190,43 @@
     padding: 20px 20px 16px;
   }
 
+  /* ===== DISCOVERY MISSIONS ===== */
+  .mission-card {
+    border-top: 4px solid var(--coral);
+    background: linear-gradient(180deg, #FFF9F9 0%, #fff 100%);
+  }
+  .mission-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .mission-btn {
+    background: #fff;
+    border: 2px solid var(--border);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: all 200ms ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mission-btn:hover {
+    border-color: var(--coral);
+    background: #FFF5F5;
+    transform: translateX(4px);
+  }
+  .mission-btn.active {
+    border-color: var(--coral);
+    background: #FFF0F0;
+    box-shadow: 0 2px 8px rgba(255,107,107,0.15);
+  }
+  .mission-btn .icon { font-size: 18px; }
+  .mission-btn .m-title { font-size: 13px; font-weight: 700; color: var(--ocean); display: block; }
+  .mission-btn .m-desc { font-size: 11px; color: var(--muted); }
+
   /* ===== PENGUIN SELECTOR ===== */
   .penguin-wrap {
     position: relative;
@@ -542,6 +579,34 @@
   <!-- ============ SIDEBAR ============ -->
   <aside class="sidebar" aria-label="Filters and axis selection">
 
+    <!-- Discovery Missions -->
+    <section class="card mission-card" aria-labelledby="missionHeading">
+      <h2 id="missionHeading">Discovery Missions</h2>
+      <div class="mission-grid">
+        <button class="mission-btn" data-mission="giants" aria-label="Start mission: Island of Giants">
+          <span class="icon">🏔️</span>
+          <div>
+            <span class="m-title">The Island of Giants</span>
+            <span class="m-desc">Find the heaviest penguins on Biscoe.</span>
+          </div>
+        </button>
+        <button class="mission-btn" data-mission="mystery" aria-label="Start mission: Bill Shape Mystery">
+          <span class="icon">🔍</span>
+          <div>
+            <span class="m-title">The Bill Shape Mystery</span>
+            <span class="m-desc">Compare survival tools on Dream island.</span>
+          </div>
+        </button>
+        <button class="mission-btn" data-mission="gender" aria-label="Start mission: The Gender Gap">
+          <span class="icon">⚖️</span>
+          <div>
+            <span class="m-title">The Gender Gap</span>
+            <span class="m-desc">See size differences between sexes.</span>
+          </div>
+        </button>
+      </div>
+    </section>
+
     <!-- Penguin axis selector -->
     <section class="card" aria-labelledby="selectorHeading">
       <h2 id="selectorHeading">Select body measurements</h2>
@@ -694,16 +759,33 @@
 
     <!-- Scatter — hero chart, starts populated with default axes -->
     <div class="card scatter-card" id="scatterCard">
-      <h2 id="scatterTitle">Select measurements to explore</h2>
-      <div id="scatterPlot"
-           class="plot"
-           role="img"
-           aria-labelledby="scatterTitle"
-           aria-describedby="scatterDesc"></div>
-      <p id="scatterDesc" class="sr-only"></p>
-      <div class="placeholder" id="scatterPlaceholder" style="display:none;">
-        <div class="big" aria-hidden="true">👆</div>
-        <div>Select a second body measurement to display the scatter plot</div>
+      <div class="scatter-layout">
+        <!-- Narrative Sidebar -->
+        <aside class="narrative-panel" id="narrativePanel" aria-live="polite">
+          <h3>Field Journal</h3>
+          <div class="story-text" id="narrativeStory">
+            Select body measurements on the penguin diagram to begin your exploration.
+          </div>
+          <div id="narrativeDetails">
+            <!-- Dynamic bullet points go here -->
+          </div>
+        </aside>
+
+        <!-- Plot Area -->
+        <div class="plot-area">
+          <h2 id="scatterTitle">Select measurements to explore</h2>
+          <div id="scatterPlot"
+               class="plot"
+               role="img"
+               aria-labelledby="scatterTitle"
+               aria-describedby="scatterDesc"></div>
+          <p id="scatterDesc" class="sr-only"></p>
+          <div class="placeholder" id="scatterPlaceholder">
+            <div class="big" aria-hidden="true">🐧</div>
+            <div style="font-weight:700; font-size: 16px; color: var(--ocean);">Welcome to the Palmer Penguins · Island Detail Explorer!</div>
+            <div>Click on the penguin diagram to choose measurements to explore</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -845,7 +927,82 @@ const state = {
   species: new Set(["Adelie","Chinstrap","Gentoo"]),
   sex:     new Set(["male","female"]),
   island:  "ALL",
+  mission: null,
 };
+
+//===================== MISSIONS =====================
+const missions = {
+  giants: {
+    island: "Biscoe",
+    selX: "flipper_length_mm",
+    selY: "body_mass_g",
+    species: ["Adelie", "Chinstrap", "Gentoo"],
+    sex: ["male", "female"],
+    title: "The Island of Giants",
+    insight: "<b>Look at the blue cluster (Gentoo).</b> On Biscoe Island, they have evolved massive bodies and long flippers—almost like underwater wings—to dive deeper and stay warmer than the smaller Adelies."
+  },
+  mystery: {
+    island: "Dream",
+    selX: "bill_length_mm",
+    selY: "bill_depth_mm",
+    species: ["Adelie", "Chinstrap", "Gentoo"],
+    sex: ["male", "female"],
+    title: "The Bill Shape Mystery",
+    insight: "<b>Compare the red (Adelie) and teal (Chinstrap) clusters.</b> Even though they weigh about the same, Chinstraps have much longer, thinner bills, while Adelies have shorter, deeper bills. They evolved different 'tools' to hunt different prey in the same waters!"
+  },
+  gender: {
+    island: "ALL",
+    selX: "flipper_length_mm",
+    selY: "body_mass_g",
+    species: ["Adelie", "Chinstrap", "Gentoo"],
+    sex: ["male", "female"],
+    title: "The Gender Gap",
+    insight: "<b>Nature's consistent rule:</b> Across every species and island, males (circles) are consistently larger than females (diamonds). This is a biological fingerprint called 'Sexual Dimorphism' visible in every cluster."
+  }
+};
+
+function runMission(type) {
+  const m = missions[type];
+  if (!m) return;
+
+  state.mission = type;
+  state.island = m.island;
+  state.selX = m.selX;
+  state.selY = m.selY;
+  state.order = ["X", "Y"];
+  state.species = new Set(m.species);
+  state.sex = new Set(m.sex);
+
+  // Update Island UI radio specifically
+  document.querySelectorAll("#islandChips input[type='radio']").forEach(input => {
+    input.checked = (input.value === m.island);
+    input.closest(".chip").classList.toggle("active", input.checked);
+  });
+  const labelEl = document.getElementById("islandLabel");
+  const text = state.island === "ALL" ? "ALL ISLANDS" : state.island.toUpperCase() + " ISLAND";
+  labelEl.textContent = text;
+
+  // Update Filter Chips UI
+  document.querySelectorAll(".chip[data-species], .chip[data-sex]").forEach(c => {
+    const val = c.dataset.species || c.dataset.sex;
+    const active = state.species.has(val) || state.sex.has(val);
+    c.classList.toggle("active", active);
+    c.setAttribute("aria-pressed", active);
+  });
+
+  renderAll();
+}
+
+document.querySelectorAll(".mission-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    runMission(btn.dataset.mission);
+  });
+});
+
+function clearMission() {
+  state.mission = null;
+  document.querySelectorAll(".mission-btn").forEach(b => b.classList.remove("active"));
+}
 
 //===================== HELPERS =====================
 function getFiltered() {
@@ -882,6 +1039,7 @@ zones.forEach(z => {
 });
 
 function selectFeature(feat) {
+  clearMission();
   if (state.selX === feat) {
     state.selX = null;
     state.order = state.order.filter(s => s !== "X");
@@ -904,6 +1062,7 @@ function selectFeature(feat) {
 }
 
 document.getElementById("resetBtn").addEventListener("click", () => {
+  clearMission();
   state.selX = null;
   state.selY = null;
   state.order = [];
@@ -913,6 +1072,7 @@ document.getElementById("resetBtn").addEventListener("click", () => {
 //===================== FILTER CHIPS — species & sex =====================
 document.querySelectorAll("#speciesChips .chip").forEach(c => {
   c.addEventListener("click", () => {
+    clearMission();
     const sp = c.dataset.species;
     if (state.species.has(sp)) {
       if (state.species.size === 1) return;
@@ -930,6 +1090,7 @@ document.querySelectorAll("#speciesChips .chip").forEach(c => {
 
 document.querySelectorAll("#sexChips .chip").forEach(c => {
   c.addEventListener("click", () => {
+    clearMission();
     const s = c.dataset.sex;
     if (state.sex.has(s)) {
       if (state.sex.size === 1) return;
@@ -948,6 +1109,7 @@ document.querySelectorAll("#sexChips .chip").forEach(c => {
 // Island — radio inputs
 document.querySelectorAll("#islandChips input[type='radio']").forEach(input => {
   input.addEventListener("change", () => {
+    clearMission();
     state.island = input.value;
     // Update chip active states
     document.querySelectorAll("#islandChips .chip").forEach(label => {
@@ -1255,11 +1417,28 @@ function renderStats(data) {
 //===================== INSIGHT =====================
 function renderInsight(data) {
   const el = document.getElementById("insight");
+  const heading = document.getElementById("insightHeading");
+
+  // Update Mission Buttons UI
+  document.querySelectorAll(".mission-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mission === state.mission);
+  });
+
   if (!data.length) {
     el.textContent = "No data with the current filters. Try broadening your selection.";
     return;
   }
 
+  // MISSION DRIVEN INSIGHT
+  if (state.mission && missions[state.mission]) {
+    heading.textContent = "Discovery: " + missions[state.mission].title;
+    el.innerHTML = missions[state.mission].insight;
+    return;
+  }
+
+  // DEFAULT DYNAMIC INSIGHT
+  heading.textContent = "Finding";
+  
   // Initial fresh state
   if (!state.selX && !state.selY) {
     el.innerHTML = "Select body measurements on the penguin diagram to discover biological insights.";
@@ -1299,11 +1478,90 @@ function renderInsight(data) {
   el.innerHTML = parts.join(" ");
 }
 
+//===================== NARRATIVE =====================
+function renderNarrative(data) {
+  const storyEl   = document.getElementById("narrativeStory");
+  const detailsEl = document.getElementById("narrativeDetails");
+
+  if (!state.selX || !state.selY) {
+    storyEl.textContent = "Select body measurements on the penguin diagram to begin your exploration.";
+    detailsEl.innerHTML = "";
+    return;
+  }
+
+  if (!data.length) {
+    storyEl.textContent = "No data to analyze. Try broadening your filters.";
+    detailsEl.innerHTML = "";
+    return;
+  }
+
+  // --- 1. THE STORY TEXT (Contextual Intelligence) ---
+  let story = "";
+  const axes = [state.selX, state.selY];
+  
+  if (state.mission && missions[state.mission]) {
+    story = missions[state.mission].insight;
+  } 
+  // Case: Body Mass + Flipper (The Physics of Flight)
+  else if (axes.includes("body_mass_g") && axes.includes("flipper_length_mm")) {
+    story = "<b>The Physics of Diving.</b> Penguins are 'underwater flyers.' This view shows the critical ratio between engine power (body mass) and wing surface (flipper length). Larger flippers are essential for the heavy Gentoo to maintain agility while hunting.";
+  }
+  // Case: Bill Length + Bill Depth (The Feeding Specialist)
+  else if (axes.includes("bill_length_mm") && axes.includes("bill_depth_mm")) {
+    story = "<b>Dietary Niche Partitioning.</b> Biologists look at bill shape to understand what a penguin eats. Deep, short bills (Adelie) are perfect for crushing krill, while long, slender bills (Chinstrap) are better for snatching slippery fish.";
+  }
+  // Case: Bill Length + Body Mass (The Size-to-Reach Ratio)
+  else if (axes.includes("bill_length_mm") && axes.includes("body_mass_g")) {
+    story = "<b>Resource Acquisition.</b> This comparison reveals if larger penguins necessarily have longer reaches. Notice how species like Gentoo balance massive body reserves with efficient feeding tools.";
+  }
+  // Case: Flipper + Bill Depth (Structural Contrast)
+  else if (axes.includes("flipper_length_mm") && axes.includes("bill_depth_mm")) {
+    story = "<b>The Specialist's Blueprint.</b> This view contrasts locomotion (flippers) with feeding (bills). It often shows the clearest separation between the deep-diving Gentoos and the surface-feeding Adelies.";
+  }
+  else {
+    story = "<b>Biological Fingerprints.</b> These specific dimensions allow researchers to identify species even from a distance. Every millimeter represents an evolutionary choice made for survival in the harsh Antarctic climate.";
+  }
+  storyEl.innerHTML = story;
+
+  // --- 2. THE DYNAMIC DETAILS (Fact-Checking & Statistics) ---
+  const details = [];
+  
+  // Highlight heaviest
+  const heaviest = [...data].sort((a,b) => b.body_mass_g - a.body_mass_g)[0];
+  details.push(`<li>The heaviest penguin in view is a <span class="highlight">${heaviest.species}</span> at <span class="highlight">${fmt("body_mass_g", heaviest.body_mass_g)}</span>.</li>`);
+
+  // Specific Correlation Insights
+  if (axes.includes("body_mass_g") && axes.includes("flipper_length_mm")) {
+    const avgMass = mean(data.map(r => r.body_mass_g));
+    if (avgMass > 4500) {
+      details.push("<li>This population skews <b>heavy</b>, indicating high calorie availability in their habitat.</li>");
+    }
+  }
+
+  // Island context (Fixed: check ALL_DATA for natural population)
+  if (state.island !== "ALL") {
+    const naturalSpecies = new Set(ALL_DATA.filter(r => r.island === state.island).map(r => r.species));
+    if (naturalSpecies.size === 1) {
+      details.push(`<li><b>Island Fact:</b> ${state.island} is naturally a single-species colony for ${[...naturalSpecies][0]}s.</li>`);
+    } else {
+      details.push(`<li><b>Island Fact:</b> ${state.island} is a diverse hub shared by <span class="highlight">${naturalSpecies.size}</span> different species.</li>`);
+    }
+  }
+
+  // Range analysis
+  const xVals = data.map(r => r[state.selX]);
+  const range = (Math.max(...xVals) - Math.min(...xVals)).toFixed(1);
+  details.push(`<li>The <span class="highlight">${FEAT_SHORT[state.selX]}</span> varies by <span class="highlight">${range}mm</span> across this selection.</li>`);
+
+  detailsEl.innerHTML = `<ul>${details.join("")}</ul>`;
+}
+
 //===================== RENDER ALL =====================
 function renderAll() {
   updateZones();
   const filtered = getFiltered();   // computed ONCE, passed to all renders
   renderScatter(filtered);
+  renderNarrative(filtered);
   renderInsight(filtered);          // insight before secondary charts in DOM order
   renderBar(filtered);
   renderBox(filtered);
