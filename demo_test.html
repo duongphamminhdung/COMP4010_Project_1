@@ -1117,6 +1117,7 @@ function renderBar(data) {
     marker: { color: entries.map(e => COLORS[e[0]]) },
     text: entries.map(e => e[1]),
     textposition: "outside",
+    textfont: { weight: "bold" },
     hovertemplate: "<b>%{y}</b><br>%{x} penguins<extra></extra>",
   };
 
@@ -1137,15 +1138,20 @@ function renderBar(data) {
 
   Plotly.react("barPlot", [trace], {
     ...BASE_LAYOUT,
-    margin: { l: 80, r: 40, t: 10, b: 30 },
+    margin: { l: 80, r: 40, t: 10, b: 50 },
     // Fixed range + zero-duration transition = completely frozen axes
     xaxis: { 
       gridcolor: "#E8E8E8", 
-      title: { text: "<b>Count</b>", font: { size: 15, color: "#1B4965" } }, 
+      title: { 
+        text: "<b>Count</b>", 
+        font: { size: 15, color: "#1B4965" },
+        standoff: 15
+      }, 
       range: [0, MAX_SPECIES_COUNT], 
-      fixedrange: true 
+      fixedrange: true,
+      tickfont: { weight: "bold" }
     },
-    yaxis: { automargin: true, fixedrange: true },
+    yaxis: { automargin: true, fixedrange: true, tickfont: { weight: "bold" } },
     showlegend: false,
     transition: { duration: 300, easing: "cubic-in-out" },
   }, { displayModeBar: false, responsive: true });
@@ -1198,22 +1204,29 @@ function renderBox(data) {
 
   Plotly.react("boxPlot", traces, {
     ...BASE_LAYOUT,
-    margin: { l: 60, r: 20, t: 10, b: 30 },
+    margin: { l: 80, r: 20, t: 10, b: 50 },
     yaxis: {
       gridcolor: "#E8E8E8",
       title: {
         text: "<b>" + FEAT_LABEL[yFeat] + "</b>",
-        font: { size: 15, color: "#1B4965" }
+        font: { size: 15, color: "#1B4965" },
+        standoff: 15
       },
       tickformat: yTickFormat,
       // Fixed range from full dataset — axis stays completely frozen
       range: FEAT_RANGE[yFeat],
       fixedrange: true,
+      tickfont: { weight: "bold" }
     },
     xaxis: {
       gridcolor: "#E8E8E8",
-      title: { text: "<b>Species</b>", font: { size: 15, color: "#1B4965" } },
-      fixedrange: true
+      title: { 
+        text: "<b>Species</b>", 
+        font: { size: 15, color: "#1B4965" },
+        standoff: 15
+      },
+      fixedrange: true,
+      tickfont: { weight: "bold" }
     },
     showlegend: false,
     transition: { duration: 300, easing: "cubic-in-out" },
